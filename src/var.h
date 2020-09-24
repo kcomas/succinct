@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
+#include "string.h"
 
 #define VAR_PFX(NAME) VAR_##NAME
 
@@ -24,13 +25,12 @@ typedef enum {
     VAR_PFX(DATE),
     VAR_PFX(TIME),
     VAR_PFX(DATETIME),
-    VAR_PFX(TUPLE),
     VAR_PFX(VECTOR),
-    VAR_PFX(STRUCT),
     VAR_PFX(HASH),
     VAR_PFX(FN),
     VAR_PFX(THREAD),
-    VAR_PFX(FD)
+    VAR_PFX(FD),
+    VAR_PFX(REGEX)
 } var_type;
 
 typedef struct _var var;
@@ -44,8 +44,8 @@ typedef union {
     int16_t i16;
     int32_t i32;
     int64_t i64;
-    char ch[4];
-    char *st;
+    char chr[4];
+    string *str;
     struct tm *date;
     struct timespec *ts;
     int fd;

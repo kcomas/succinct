@@ -27,6 +27,7 @@ typedef enum {
     TOKEN_PFX(MUL), // *
     TOKEN_PFX(WRITE), // &>
     // Control Flow
+    TOKEN_PFX(NEWLINE), // \n
     TOKEN_PFX(SEPRATOR), // ;
     TOKEN_PFX(IF), // ?
     TOKEN_PFX(EQUAL), // =
@@ -38,3 +39,9 @@ typedef struct {
     size_t char_no, line_no;
     size_t start_idx, end_idx;
 } token;
+
+#define TOKEN_STATUS_PFX(NAME) TOKEN_STATUS_##NAME
+
+typedef enum {
+    TOKEN_STATUS_PFX(OK)
+} token_status;
