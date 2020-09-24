@@ -18,7 +18,8 @@ int main(int argc, char *argv[]) {
     printf("%s\n", str->buffer);
     token t;
     token_init(&t);
-    token_next(&t, str);
+    token_status ts;
+    while ((ts = token_next(&t, str)) == TOKEN_STATUS_PFX(SOME)) token_print(&t, str);
     string_free(str);
     return 0;
 }

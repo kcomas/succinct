@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include "string.h"
 
 #define TOKEN_PFX(NAME) TOKEN_##NAME
@@ -33,7 +34,8 @@ typedef enum {
     TOKEN_PFX(SEPRATOR), // ;
     TOKEN_PFX(IF), // ?
     TOKEN_PFX(EQUAL), // =
-    TOKEN_PFX(LESSEQUAL) // <=
+    TOKEN_PFX(LESSEQUAL), // <=
+    TOKEN_PFX(_MAX_TOKENS)
 } token_type;
 
 typedef struct {
@@ -50,6 +52,14 @@ inline void token_init(token *const t) {
     t->end_idx = 0;
 }
 
+const char *token_type_string(token_type type);
+
+inline void token_print(const token *const t, const string *const s) {
+    printf("Line: %lu, Char %lu, %s, ", t->line_no, t->char_no, token_type_string(t->type));
+    for(size_t i = t->start_idx; i <= t->end_idx; i++) putchar(s->buffer[i]);
+    putchar('\n');
+}
+
 #define TOKEN_STATUS_PFX(NAME) TOKEN_STATUS_##NAME
 
 typedef enum {
@@ -57,4 +67,4 @@ typedef enum {
     TOKEN_STATUS_PFX(NONE)
 } token_status;
 
-token_status token_next(token *const t, const string *s);
+token_status token_next(token *const t, const string *const s);

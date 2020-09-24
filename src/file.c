@@ -1,11 +1,11 @@
 
 #include "file.h"
 
-extern inline int file_open_r(const char *file_path);
+extern inline int file_open_r(const char *const file_path);
 
-extern inline int file_open_a(const char *file_path);
+extern inline int file_open_a(const char *const file_path);
 
-extern inline int file_open_w(const char *file_path);
+extern inline int file_open_w(const char *const file_path);
 
 extern inline int file_close(int fd);
 
