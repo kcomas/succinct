@@ -4,7 +4,7 @@
 extern inline void token_init(token *const t);
 
 static inline char get_char(token *const t, const string *s) {
-    if (t->end_idx >= s->len) return '\n';
+    if (t->end_idx >= s->len) return '\0';
     return s->buffer[t->end_idx];
 }
 
@@ -32,6 +32,7 @@ token_status token_next(token *const t, const string *s) {
     remove_spaces(t, s);
     t->start_idx = t->end_idx;
     char c = get_char(t, s);
+    if (c == '\0') return TOKEN_STATUS_PFX(NONE);
     printf("%c\n", c);
-    return 0;
+    return TOKEN_STATUS_PFX(SOME);
 }

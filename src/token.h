@@ -53,7 +53,8 @@ inline void token_init(token *const t) {
 #define TOKEN_STATUS_PFX(NAME) TOKEN_STATUS_##NAME
 
 typedef enum {
-    TOKEN_STATUS_PFX(OK)
+    TOKEN_STATUS_PFX(SOME),
+    TOKEN_STATUS_PFX(NONE)
 } token_status;
 
 token_status token_next(token *const t, const string *s);
