@@ -16,7 +16,7 @@ static inline void next_char_update(token *const t) {
 static inline void newline_update(token *const t) {
     t->end_idx++;
     t->char_no = 1;
-    t->line_no = 0;
+    t->line_no++;
 }
 
 static void remove_spaces(token *const t, const string *s) {
