@@ -14,6 +14,7 @@ typedef enum {
     TOKEN_PFX(VAR),
     TOKEN_PFX(INT),
     TOKEN_PFX(CHAR),
+    TOKEN_PFX(STRING),
     // Types
     TOKEN_PFX(U64),
     // Parens
@@ -52,6 +53,10 @@ inline void token_init(token *const t) {
     t->end_idx = 0;
 }
 
+inline size_t token_len(const token *const t) {
+    return t->end_idx - t->start_idx + 1;
+}
+
 const char *token_type_string(token_type type);
 
 inline void token_print(const token *const t, const string *const s) {
@@ -64,7 +69,8 @@ inline void token_print(const token *const t, const string *const s) {
 
 typedef enum {
     TOKEN_STATUS_PFX(SOME),
-    TOKEN_STATUS_PFX(NONE)
+    TOKEN_STATUS_PFX(NONE),
+    TOKEN_STATUS_PFX(EXCEDED_MAX_STRING_LEN)
 } token_status;
 
 token_status token_next(token *const t, const string *const s);

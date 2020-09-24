@@ -3,12 +3,15 @@
 
 extern inline void token_init(token *const t);
 
+extern inline size_t token_len(const token *const t);
+
 const char *token_type_string(token_type type) {
     static const char* types[] = {
         "NONE",
         "VAR",
         "INT",
         "CHAR",
+        "STRING",
         "U64",
         "LBRACE",
         "RBRACE",
@@ -81,15 +84,41 @@ static token_status parse_num(token* const t, const string *const s) {
     return TOKEN_STATUS_PFX(SOME);
 }
 
+static token_status parse_string(token* const t, const string *const s) {
+    static const size_t max_inline_string_size = 1024;
+    // we are on first "
+    char peek = peek_char(t, s);
+    if (peek == '"') {
+        // empty string
+        next_char_update(t);
+        t->type = TOKEN_PFX(STRING);
+        return TOKEN_STATUS_PFX(SOME);
+    }
+    size_t pos = 0;
+    while ((peek = peek_char(t, s)) != '"') {
+        next_char_update(t);
+        if (++pos >= max_inline_string_size) return TOKEN_STATUS_PFX(EXCEDED_MAX_STRING_LEN);
+    }
+    next_char_update(t);
+    // char if 3 chars for char of 4 chars for escape char
+    if (token_len(t) == 3 || (token_len(t) == 4 && s->buffer[t->start_idx + 1] == '\\')) {
+        t->type = TOKEN_PFX(CHAR);
+    } else {
+        t->type = TOKEN_PFX(STRING);
+    }
+    return TOKEN_STATUS_PFX(SOME);
+}
+
 token_status token_next(token *const t, const string *const s) {
     remove_spaces(t, s);
-    // on a non \s char if the start and end are same
+    // on a non \s char of prev token if the start and end are same
     if (t->start_idx == t->end_idx) t->end_idx++;
     t->start_idx = t->end_idx;
     char c = get_char(t, s);
     if (c == '\0') return TOKEN_STATUS_PFX(NONE);
     if (isalpha(c)) return parse_var(t, s);
     if (isdigit(c)) return parse_num(t, s);
+    if (c == '"') return parse_string(t, s);
     switch (c) {
 
     }
