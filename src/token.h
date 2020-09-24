@@ -42,7 +42,7 @@ typedef struct {
     size_t start_idx, end_idx;
 } token;
 
-inline void token_init(token const *t) {
+inline void token_init(token *const t) {
     t->type = TOKEN_PFX(NONE);
     t->char_no = 1;
     t->line_no = 1;
@@ -56,4 +56,4 @@ typedef enum {
     TOKEN_STATUS_PFX(OK)
 } token_status;
 
-token_status token_next(token const *t, const string const *s);
+token_status token_next(token *const t, const string *s);
