@@ -3,10 +3,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "string.h"
 
 #define TOKEN_PFX(NAME) TOKEN_##NAME
 
 typedef enum {
+    TOKEN_PFX(NONE),
     // Values
     TOKEN_PFX(VAR),
     TOKEN_PFX(INT),
@@ -40,8 +42,18 @@ typedef struct {
     size_t start_idx, end_idx;
 } token;
 
+inline void token_init(token const *t) {
+    t->type = TOKEN_PFX(NONE);
+    t->char_no = 1;
+    t->line_no = 1;
+    t->start_idx = 0;
+    t->end_idx = 0;
+}
+
 #define TOKEN_STATUS_PFX(NAME) TOKEN_STATUS_##NAME
 
 typedef enum {
     TOKEN_STATUS_PFX(OK)
 } token_status;
+
+token_status token_next(token const *t, const string const *s);

@@ -12,8 +12,8 @@ int main(int argc, char *argv[]) {
     if (source_fd == -1) errno_print_exit();
     string *source_string = file_read_to_string(source_fd);
     if (source_string == NULL) errno_print_exit();
+    file_close(source_fd);
     printf("%s\n", source_string->buffer);
     string_free(source_string);
-    file_close(source_fd);
     return 0;
 }
