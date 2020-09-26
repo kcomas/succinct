@@ -181,5 +181,5 @@ token_status token_next(token *const t, const string *const s) {
             else
                 return found_token(t, TOKEN_PFX(AND));
     }
-    return TOKEN_STATUS_PFX(SOME);
+    return TOKEN_STATUS_PFX(NONE);
 }
