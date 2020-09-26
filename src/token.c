@@ -166,7 +166,9 @@ token_status token_next(token *const t, const string *const s) {
                 return found_token(t, TOKEN_PFX(ASSIGN));
         case '-': return found_token(t, TOKEN_PFX(SUB));
         case '*': return found_token(t, TOKEN_PFX(MUL));
-        case '\n': return found_token(t, TOKEN_PFX(NEWLINE));
+        case '\n':
+                  newline_update(t);
+                  return found_token(t, TOKEN_PFX(NEWLINE));
         case ';': return found_token(t, TOKEN_PFX(SEPRATOR));
         case '?': return found_token(t, TOKEN_PFX(COND));
         case '=': return found_token(t, TOKEN_PFX(EQUAL));
