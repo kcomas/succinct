@@ -26,9 +26,11 @@ const char *token_type_string(token_type type) {
         "WRITE",
         "NEWLINE",
         "SEPRATOR",
-        "IF",
+        "COND",
         "EQUAL",
+        "LESS",
         "LESSEQUAL",
+        "AND",
         "_MAX_TOKENS"
     };
     return type < TOKEN_PFX(_MAX_TOKENS) ? types[type] : "UNKNOWN";
@@ -65,10 +67,12 @@ static void newline_update(token *const t) {
     t->line_no++;
 }
 
-static void remove_spaces(token *const t, const string *s) {
+static void remove_spaces(token *const t, const string *const s) {
     t->start_idx = t->end_idx;
+    char c = peek_char(t, s);
+    if (c == ' ' || c == '\t') next_char_update(t);
     for (;;) {
-        char c = get_char(t, s);
+        c = get_char(t, s);
         if (c == ' ' || c == '\t') next_char_update(t);
         else if (c == '\n') newline_update(t);
         else break;
@@ -129,6 +133,14 @@ static token_status parse_string(token* const t, const string *const s) {
     return TOKEN_STATUS_PFX(SOME);
 }
 
+static bool char_lookup_one(token *const t, const string *const s, char cmp) {
+    if (peek_char(t, s) == cmp) {
+        next_char_update(t);
+        return true;
+    }
+    return false;
+}
+
 token_status token_next(token *const t, const string *const s) {
     t->type = TOKEN_PFX(UNKNOWN);
     remove_spaces(t, s);
@@ -147,6 +159,27 @@ token_status token_next(token *const t, const string *const s) {
         case ']': return found_token(t, TOKEN_PFX(RBRACKET));
         case '(': return found_token(t, TOKEN_PFX(LPARENS));
         case ')': return found_token(t, TOKEN_PFX(RPARENS));
+        case ':':
+            if (char_lookup_one(t, s, ':'))
+                return found_token(t, TOKEN_PFX(DEFINE));
+            else
+                return found_token(t, TOKEN_PFX(ASSIGN));
+        case '-': return found_token(t, TOKEN_PFX(SUB));
+        case '*': return found_token(t, TOKEN_PFX(MUL));
+        case '\n': return found_token(t, TOKEN_PFX(NEWLINE));
+        case ';': return found_token(t, TOKEN_PFX(SEPRATOR));
+        case '?': return found_token(t, TOKEN_PFX(COND));
+        case '=': return found_token(t, TOKEN_PFX(EQUAL));
+        case '<':
+            if (char_lookup_one(t, s, '='))
+                return found_token(t, TOKEN_PFX(LESSEQUAL));
+            else
+                return found_token(t, TOKEN_PFX(LESS));
+        case '&':
+            if (char_lookup_one(t, s, '>'))
+                return found_token(t, TOKEN_PFX(WRITE));
+            else
+                return found_token(t, TOKEN_PFX(AND));
     }
     return TOKEN_STATUS_PFX(SOME);
 }

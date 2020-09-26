@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include "string.h"
 
 #define TOKEN_PFX(NAME) TOKEN_##NAME
@@ -33,9 +34,11 @@ typedef enum {
     // Control Flow
     TOKEN_PFX(NEWLINE), // \n
     TOKEN_PFX(SEPRATOR), // ;
-    TOKEN_PFX(IF), // ?
+    TOKEN_PFX(COND), // ?
     TOKEN_PFX(EQUAL), // =
+    TOKEN_PFX(LESS), // <
     TOKEN_PFX(LESSEQUAL), // <=
+    TOKEN_PFX(AND),
     TOKEN_PFX(_MAX_TOKENS)
 } token_type;
 
