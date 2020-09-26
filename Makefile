@@ -3,10 +3,11 @@ CFLAGS = -std=c11 -g -Wall -Wextra
 SRC = ./src
 SOURCES = $(wildcard $(SRC)/*.c)
 OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
+NAME = sc
 
 all: sc
 
-sc: $(OBJECTS)
+$(NAME): $(OBJECTS)
 	$(CC) -o $@ $^
 
 %.o: %.c
@@ -15,4 +16,4 @@ sc: $(OBJECTS)
 .PHONY: clean
 clean:
 	rm -f $(SRC)/*.o
-	rm -f sc
+	rm -f $(NAME)

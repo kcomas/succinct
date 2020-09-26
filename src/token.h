@@ -9,7 +9,7 @@
 #define TOKEN_PFX(NAME) TOKEN_##NAME
 
 typedef enum {
-    TOKEN_PFX(NONE),
+    TOKEN_PFX(UNKNOWN),
     // Values
     TOKEN_PFX(VAR),
     TOKEN_PFX(INT),
@@ -46,7 +46,7 @@ typedef struct {
 } token;
 
 inline void token_init(token *const t) {
-    t->type = TOKEN_PFX(NONE);
+    t->type = TOKEN_PFX(UNKNOWN);
     t->char_no = 1;
     t->line_no = 1;
     t->start_idx = 0;
