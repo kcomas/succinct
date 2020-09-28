@@ -21,6 +21,7 @@ const char *token_type_string(token_type type) {
         "RPARENS",
         "ASSIGN",
         "DEFINE",
+        "ADD",
         "SUB",
         "MUL",
         "WRITE",
@@ -62,21 +63,20 @@ static char get_char(const token *const t, const string *const s) {
 }
 
 static void newline_update(token *const t) {
-    t->end_idx++;
+    // t->end_idx++;
     t->char_no = 1;
     t->line_no++;
 }
 
 static void remove_spaces(token *const t, const string *const s) {
-    t->start_idx = t->end_idx;
-    char c = peek_char(t, s);
-    if (c == ' ' || c == '\t') next_char_update(t);
     for (;;) {
-        c = get_char(t, s);
-        if (c == ' ' || c == '\t') next_char_update(t);
-        else if (c == '\n') newline_update(t);
+        char c = get_char(t, s);
+        if (c == ' ' || c == '\t') {
+            next_char_update(t);
+        }
         else break;
     }
+    t->start_idx = t->end_idx;
 }
 
 static token_status found_token(token *const t, token_type type) {
@@ -143,10 +143,9 @@ static bool char_lookup_one(token *const t, const string *const s, char cmp) {
 
 token_status token_next(token *const t, const string *const s) {
     t->type = TOKEN_PFX(UNKNOWN);
-    remove_spaces(t, s);
-    // on a non \s char of prev token if the start and end are same
+    if (t->end_idx == 0) if (get_char(t, s) != '\n') return TOKEN_STATUS_PFX(FILE_MUST_START_NEWLINE);
     if (t->start_idx == t->end_idx) next_char_update(t);
-    t->start_idx = t->end_idx;
+    remove_spaces(t, s);
     char c = get_char(t, s);
     if (c == '\0') return TOKEN_STATUS_PFX(NONE);
     if (isalpha(c)) return parse_var(t, s);
@@ -164,6 +163,7 @@ token_status token_next(token *const t, const string *const s) {
                 return found_token(t, TOKEN_PFX(DEFINE));
             else
                 return found_token(t, TOKEN_PFX(ASSIGN));
+        case '+': return found_token(t, TOKEN_PFX(ADD));
         case '-': return found_token(t, TOKEN_PFX(SUB));
         case '*': return found_token(t, TOKEN_PFX(MUL));
         case '\n':

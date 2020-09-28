@@ -28,6 +28,7 @@ typedef enum {
     // Operators
     TOKEN_PFX(ASSIGN), // :
     TOKEN_PFX(DEFINE), // ::
+    TOKEN_PFX(ADD), // +
     TOKEN_PFX(SUB), // -
     TOKEN_PFX(MUL), // *
     TOKEN_PFX(WRITE), // &>
@@ -63,7 +64,7 @@ inline size_t token_len(const token *const t) {
 const char *token_type_string(token_type type);
 
 inline void token_print(const token *const t, const string *const s) {
-    printf("Line: %lu, Char %lu, %s, ", t->line_no, t->char_no, token_type_string(t->type));
+    printf("Line: %lu, Char %lu, Len: %lu, %s, ", t->line_no, t->char_no, token_len(t), token_type_string(t->type));
     for(size_t i = t->start_idx; i <= t->end_idx; i++) putchar(s->buffer[i]);
     putchar('\n');
 }
@@ -73,6 +74,7 @@ inline void token_print(const token *const t, const string *const s) {
 typedef enum {
     TOKEN_STATUS_PFX(SOME),
     TOKEN_STATUS_PFX(NONE),
+    TOKEN_STATUS_PFX(FILE_MUST_START_NEWLINE),
     TOKEN_STATUS_PFX(EXCEDED_MAX_STRING_LEN)
 } token_status;
 
