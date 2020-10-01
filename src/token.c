@@ -34,7 +34,7 @@ const char *token_type_string(token_type type) {
         "AND",
         "_MAX_TOKENS"
     };
-    return type < TOKEN_PFX(_MAX_TOKENS) ? types[type] : "UNKNOWN";
+    return type >= TOKEN_PFX(UNKNOWN) && type < TOKEN_PFX(_MAX_TOKENS) ? types[type] : types[0];
 };
 
 extern inline void token_print(const token *const t, const string *const s);
@@ -63,7 +63,6 @@ static char get_char(const token *const t, const string *const s) {
 }
 
 static void newline_update(token *const t) {
-    // t->end_idx++;
     t->char_no = 1;
     t->line_no++;
 }
@@ -71,9 +70,7 @@ static void newline_update(token *const t) {
 static void remove_spaces(token *const t, const string *const s) {
     for (;;) {
         char c = get_char(t, s);
-        if (c == ' ' || c == '\t') {
-            next_char_update(t);
-        }
+        if (c == ' ' || c == '\t') next_char_update(t);
         else break;
     }
     t->start_idx = t->end_idx;
@@ -144,7 +141,7 @@ static bool char_lookup_one(token *const t, const string *const s, char cmp) {
 token_status token_next(token *const t, const string *const s) {
     t->type = TOKEN_PFX(UNKNOWN);
     if (t->end_idx == 0) if (get_char(t, s) != '\n') return TOKEN_STATUS_PFX(FILE_MUST_START_NEWLINE);
-    if (t->start_idx == t->end_idx) next_char_update(t);
+    next_char_update(t);
     remove_spaces(t, s);
     char c = get_char(t, s);
     if (c == '\0') return TOKEN_STATUS_PFX(NONE);

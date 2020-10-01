@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include "string.h"
+#include "hash.h"
 
 #define VAR_PFX(NAME) VAR_##NAME
 
@@ -25,15 +26,13 @@ typedef enum {
     VAR_PFX(DATE),
     VAR_PFX(TIME),
     VAR_PFX(DATETIME),
-    VAR_PFX(VECTOR),
+    VAR_PFX(VEC),
     VAR_PFX(HASH),
     VAR_PFX(FN),
     VAR_PFX(THREAD),
     VAR_PFX(FD),
     VAR_PFX(REGEX)
 } var_type;
-
-typedef struct _var var;
 
 typedef union {
     uint8_t u8;
@@ -48,6 +47,7 @@ typedef union {
     string *str;
     struct tm *date;
     struct timespec *ts;
+    hash *h;
     int fd;
 } var_data;
 
@@ -56,3 +56,13 @@ typedef struct _var {
     bool is_ref; // cannot be reassigned
     var_data data;
 } var;
+
+inline var *var_init(var_type type, bool is_ref, var_data data) {
+    var *v = calloc(1, sizeof(var));
+    v->type = type;
+    v->is_ref = is_ref;
+    v->data = data;
+    return v;
+}
+
+var *var_copy(const var *const v);
