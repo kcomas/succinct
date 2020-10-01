@@ -28,6 +28,22 @@ typedef enum {
     VAR_PFX(REGEX)
 } var_type_header;
 
+typedef union {
+    struct {
+        size_t len; // 0 for dynamic
+        struct _var_type *dynamic, *items[]; // all items have dynamic type
+    } vec;
+    struct {
+        size_t len; // 0 for dynamic
+        struct _var_type *dynamic; // all keys have this type
+    } hash;
+    struct {
+        size_t num_args;
+        struct _var_type *return_type, *args[];
+    } fn;
+} var_type_body;
+
 typedef struct {
     var_type_header header;
+    var_type_body *body;
 } var_type;
