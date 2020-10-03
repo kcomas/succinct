@@ -26,7 +26,6 @@ typedef union {
 } var_data;
 
 typedef struct _var {
-    bool is_ref; // cannot be reassigned
     var_type *type;
     var_data data;
 } var;

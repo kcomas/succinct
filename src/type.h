@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include <stdlib.h>
+#include <stdbool.h>
+
 #define VAR_PFX(NAME) VAR_##NAME
 
 typedef enum {
@@ -45,5 +48,6 @@ typedef union {
 
 typedef struct {
     var_type_header header;
+    bool is_ref; // cannot be reassgined
     var_type_body *body;
 } var_type;

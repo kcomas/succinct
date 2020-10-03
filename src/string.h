@@ -22,6 +22,14 @@ inline string *string_copy(const string *const s) {
     return copy;
 }
 
+inline string *string_from_c(const char *const c) {
+    size_t len = strlen(c);
+    string *s = string_init(len);
+    strcpy(s->buffer, c);
+    s->len = len;
+    return s;
+}
+
 inline void string_free(string *s) {
     free(s);
 }
