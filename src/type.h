@@ -42,9 +42,9 @@ typedef enum {
 
 typedef struct _symbol_table_bucket {
     symbol_table_type table_type;
-    size_t symbol_num, symbol_size, symbol_len;
+    size_t symbol_num, symbol_size_len; // 1 + len for null term
     union {
-        size_t stack, key; // absolute idx of the stack, if hash with fixed keys get extact idx of key
+        ssize_t stack, key; // -1 for unused, absolute idx of the stack, if hash with fixed keys get exact idx of key
     } idx;
     struct _symbol_table_bucket *next;
     var_type *type;
@@ -53,7 +53,7 @@ typedef struct _symbol_table_bucket {
 
 typedef struct {
     size_t size, used;
-    symbol_table_bucket *buckets[];
+    symbol_table_bucket *buckets[]; // list on collision
 } symbol_table;
 
 inline symbol_table *symbol_table_init(size_t size) {
@@ -84,5 +84,5 @@ typedef union {
 typedef struct _var_type {
     var_type_header header;
     bool is_ref;
-    var_type_body *body;
+    var_type_body *body; // NULL for all except for defined by union
 } var_type;
