@@ -42,7 +42,10 @@ typedef enum {
 
 typedef struct _symbol_table_bucket {
     symbol_table_type table_type;
-    size_t symbol_num, symbol_len, stack_idx;
+    size_t symbol_num, symbol_size, symbol_len;
+    union {
+        size_t stack, key; // absolute idx of the stack, if hash with fixed keys get extact idx of key
+    } idx;
     struct _symbol_table_bucket *next;
     var_type *type;
     char symbol[];
@@ -64,16 +67,16 @@ void symbol_table_free(symbol_table *s);
 typedef union {
     struct {
         size_t len; // 0 for dynamic
-        struct _var_type *dynamic, *items[]; // all items have dynamic type
+        var_type *dynamic, *items[]; // all items have dynamic type
     } vec;
     struct {
         size_t len; // 0 for dynamic
-        struct _var_type *dynamic; // all keys have this type
+        var_type *dynamic; // all keys have this type
         symbol_table *keys;
     } hash;
     struct {
         size_t num_args, num_locals;
-        struct _var_type *return_type;
+        var_type *return_type;
         symbol_table* symbols;
     } fn;
 } var_type_body;

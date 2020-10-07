@@ -15,7 +15,7 @@ typedef struct {
 
 typedef struct {
     size_t size, used;
-    hash_node buckets[]; // rehash on collision
+    hash_node buckets[]; // rehash on collision fixed keys are accesses by idx
 } hash;
 
 #define HASH_STATUS_PFX(NAME) HASH_STATUS_##NAME
