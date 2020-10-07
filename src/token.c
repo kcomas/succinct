@@ -39,6 +39,8 @@ const char *token_type_string(token_type type) {
 
 extern inline void token_print(const token *const t, const string *const s);
 
+extern inline void token_copy(token *const dest, const token *const src);
+
 static void next_char_update(token *const t) {
     t->end_idx++;
     t->char_no++;

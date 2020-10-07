@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "file.h"
 #include "error.h"
-#include "token.h"
+#include "parser.h"
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {

@@ -19,8 +19,6 @@ typedef union {
     int64_t i64;
     char chr[4];
     string *str;
-    struct tm *date;
-    struct timespec *ts;
     hash *h;
     int fd;
 } var_data;

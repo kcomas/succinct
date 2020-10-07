@@ -39,7 +39,7 @@ typedef enum {
     TOKEN_PFX(EQUAL), // =
     TOKEN_PFX(LESS), // <
     TOKEN_PFX(LESSEQUAL), // <=
-    TOKEN_PFX(AND),
+    TOKEN_PFX(AND), // &
     TOKEN_PFX(_MAX_TOKENS)
 } token_type;
 
@@ -67,6 +67,10 @@ inline void token_print(const token *const t, const string *const s) {
     printf("Line: %lu, Char %lu, Len: %lu, %s, ", t->line_no, t->char_no, token_len(t), token_type_string(t->type));
     for(size_t i = t->start_idx; i <= t->end_idx; i++) putchar(s->buffer[i]);
     putchar('\n');
+}
+
+inline void token_copy(token *const dest, const token *const src) {
+    memcpy(dest, src, sizeof(token));
 }
 
 #define TOKEN_STATUS_PFX(NAME) TOKEN_STATUS_##NAME
