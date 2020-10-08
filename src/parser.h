@@ -47,6 +47,13 @@ typedef struct _ast_node {
     } data;
 } ast_node;
 
+inline ast_fn_node *ast_fn_node_init(ast_node *parent) {
+    ast_fn_node *fn = calloc(1, sizeof(ast_fn_node));
+    fn->type = var_type_fn_init(DEFAULT_MODULE_SYMBOLE_TABLE_SIZE);
+    fn->parent = parent;
+    return fn;
+}
+
 #define PARSER_STATUS_PFX(NAME) PARSER_STATUS_##NAME
 
 typedef enum {
@@ -55,15 +62,15 @@ typedef enum {
 
 typedef struct {
     token next, peek;
-    ast_fn_node *scope;
-    ast_node **curent;
+    ast_fn_node *root_fn;
 } parser_state;
 
 inline parser_state *parser_state_init(void) {
     parser_state *state = calloc(1, sizeof(parser_state));
     token_init(&state->next);
     token_init(&state->peek);
+    state->root_fn = ast_fn_node_init(NULL);
     return state;
 }
 
-parser_status parse_module(parser_state *const state, const string *const s);
+parser_status parse_string(parser_state *const state, const string *const s);

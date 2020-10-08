@@ -14,3 +14,7 @@ void symbol_table_free(symbol_table *s) {
     }
     free(s);
 }
+
+extern inline var_type *var_type_init(var_type_header header, var_type_body body);
+
+extern inline var_type *var_type_fn_init(size_t symbol_table_size);
