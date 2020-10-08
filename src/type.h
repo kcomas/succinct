@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 #define VAR_PFX(NAME) VAR_##NAME
@@ -42,9 +43,9 @@ typedef enum {
 
 typedef struct _symbol_table_bucket {
     symbol_table_type table_type;
-    size_t symbol_num, symbol_size_len; // 1 + len for null term
+    size_t symbol_num, symbol_size_len; // 1 + length for null term
     union {
-        ssize_t stack, key; // -1 for unused, absolute idx of the stack, if hash with fixed keys get exact idx of key
+        size_t stack, key; // max for unused, absolute index of the stack, if hash with fixed keys get index of key
     } idx;
     struct _symbol_table_bucket *next;
     var_type *type;
@@ -83,6 +84,5 @@ typedef union {
 
 typedef struct _var_type {
     var_type_header header;
-    bool is_ref;
     var_type_body *body; // NULL for all except for defined by union
 } var_type;
