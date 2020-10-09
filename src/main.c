@@ -16,10 +16,12 @@ int main(int argc, char *argv[]) {
     int clo = file_close(fd);
     if (clo == -1) errno_print_exit();
     printf("%s\n", str->buffer);
+    /*
     token t;
     token_init(&t);
     token_status ts;
     while ((ts = token_next(&t, str)) == TOKEN_STATUS_PFX(SOME)) token_print(&t, str);
+    */
     string_free(str);
     return 0;
 }

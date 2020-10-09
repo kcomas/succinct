@@ -62,15 +62,17 @@ typedef enum {
 
 typedef struct {
     token next, peek;
+    string *s;
     ast_fn_node *root_fn;
 } parser_state;
 
-inline parser_state *parser_state_init(void) {
+inline parser_state *parser_state_init(string *s) {
     parser_state *state = calloc(1, sizeof(parser_state));
     token_init(&state->next);
     token_init(&state->peek);
+    state->s = s;
     state->root_fn = ast_fn_node_init(NULL);
     return state;
 }
 
-parser_status parse_string(parser_state *const state, const string *const s);
+parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node **cur_node);
