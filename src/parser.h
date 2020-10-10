@@ -1,13 +1,15 @@
 
 #pragma once
 
-#include <stdlib.h>
 #include "token.h"
 #include "type.h"
+#include "error.h"
+#include "file.h"
 
 #define AST_PFX(NAME) AST_##NAME
 
 typedef enum {
+    AST_PFX(UNKNOWN),
     AST_PFX(VAR),
     AST_PFX(INT),
     AST_PFX(CHAR),
@@ -34,18 +36,27 @@ typedef struct {
 typedef struct {
     var_type *type;
     ast_node *parent; // if null we are at the module level
-    ast_node_link *node_list;
+    ast_node_link *node_list_head, *node_list_tail;
 } ast_fn_node;
+
+typedef union {
+    ast_uop_node *uop;
+    ast_bop_node *bop;
+    ast_fn_node *fn;
+    symbol_table_bucket *var, *arg;
+} ast_data;
 
 typedef struct _ast_node {
     ast_type type;
-    union {
-        ast_uop_node *uop;
-        ast_bop_node *bop;
-        ast_fn_node *fn;
-        symbol_table_bucket *var_arg;
-    } data;
+    ast_data data;
 } ast_node;
+
+inline ast_node *ast_node_init(ast_type type, ast_data data) {
+    ast_node *node = calloc(1, sizeof(ast_node));
+    node->type = type;
+    node->data = data;
+    return node;
+}
 
 inline ast_fn_node *ast_fn_node_init(ast_node *parent) {
     ast_fn_node *fn = calloc(1, sizeof(ast_fn_node));
@@ -57,13 +68,17 @@ inline ast_fn_node *ast_fn_node_init(ast_node *parent) {
 #define PARSER_STATUS_PFX(NAME) PARSER_STATUS_##NAME
 
 typedef enum {
-    PARSER_STATUS_PFX(OK)
+    PARSER_STATUS_PFX(OK),
+    PARSER_STATUS_PFX(CANNOT_OPEN_FILE),
+    PARSER_STATUS_PFX(CANNOT_READ_FILE),
+    PARSER_STATUS_PFX(CANNOT_CLOSE_FILE)
 } parser_status;
 
 typedef struct {
     token next, peek;
     string *s;
     ast_fn_node *root_fn;
+    error *e;
 } parser_state;
 
 inline parser_state *parser_state_init(string *s) {
@@ -72,7 +87,10 @@ inline parser_state *parser_state_init(string *s) {
     token_init(&state->peek);
     state->s = s;
     state->root_fn = ast_fn_node_init(NULL);
+    state->e = error_init();
     return state;
 }
 
 parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node **cur_node);
+
+parser_status parse_module(parser_state *const state, const char* const filename);
