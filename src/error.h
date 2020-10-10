@@ -23,13 +23,13 @@ inline error *error_init(void) {
     return calloc(1, sizeof(error));
 }
 
+inline void error_free(error *e) {
+    free(e);
+}
+
 inline void error_errno(error *const e) {
     e->type = ERROR_PFX(ERRNO);
     e->no = errno;
-}
-
-inline void error_free(error *e) {
-    free(e);
 }
 
 inline void errno_print_exit(void) {

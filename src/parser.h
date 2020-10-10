@@ -81,13 +81,13 @@ typedef struct {
     error *e;
 } parser_state;
 
-inline parser_state *parser_state_init(string *s) {
+inline parser_state *parser_state_init(void) {
     parser_state *state = calloc(1, sizeof(parser_state));
     token_init(&state->next);
     token_init(&state->peek);
-    state->s = s;
     state->root_fn = ast_fn_node_init(NULL);
     state->e = error_init();
+    // string is added on parse
     return state;
 }
 

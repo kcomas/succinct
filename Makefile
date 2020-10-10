@@ -5,7 +5,7 @@ SOURCES = $(wildcard $(SRC)/*.c)
 OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 NAME = sc
 
-all: sc
+all: $(NAME)
 
 $(NAME): $(OBJECTS)
 	$(CC) -o $@ $^
