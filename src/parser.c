@@ -1,6 +1,8 @@
 
 #include "parser.h"
 
+extern inline ast_node *ast_node_init(ast_type type, ast_data data);
+
 extern inline ast_fn_node *ast_fn_node_init(ast_node *parent);
 
 extern inline parser_state *parser_state_init(void);
@@ -9,7 +11,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
 
 }
 
-parser_status parse_module(parser_state *const state, const char* const filename) {
+parser_status parse_module(parser_state *const state, const char *const filename) {
     int fd;
     if ((fd = file_open_r(filename)) == -1) {
         error_errno(state->e);

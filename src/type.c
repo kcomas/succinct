@@ -21,10 +21,10 @@ extern inline var_type *var_type_fn_init(size_t symbol_table_size);
 
 void var_type_free(var_type *t) {
     switch (t->header) {
-            case VAR_PFX(FN):
-                var_type_free(t->body.fn->return_type);
-                symbol_table_free(t->body.fn->symbols);
-                break;
+        case VAR_PFX(FN):
+            var_type_free(t->body.fn->return_type);
+            symbol_table_free(t->body.fn->symbols);
+            break;
         default:
             break;
     }
