@@ -33,9 +33,9 @@ typedef struct {
     ast_node *left, *right;
 } ast_bop_node;
 
-typedef struct {
+typedef struct _ast_fn_node {
     var_type *type;
-    ast_node *parent; // if null we are at the module level
+    struct _ast_fn_node *parent; // if null we are at the module level
     ast_node_link *list_head, *list_tail;
 } ast_fn_node;
 
@@ -58,17 +58,22 @@ inline ast_node *ast_node_init(ast_type type, ast_data data) {
     return node;
 }
 
-inline ast_fn_node *ast_fn_node_init(ast_node *parent) {
+void ast_node_free(ast_node *node);
+
+inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent) {
     ast_fn_node *fn = calloc(1, sizeof(ast_fn_node));
     fn->type = var_type_fn_init(DEFAULT_MODULE_SYMBOLE_TABLE_SIZE);
     fn->parent = parent;
     return fn;
 }
 
+void ast_fn_node_free(ast_fn_node *fn);
+
 #define PARSER_STATUS_PFX(NAME) PARSER_STATUS_##NAME
 
 typedef enum {
-    PARSER_STATUS_PFX(OK),
+    PARSER_STATUS_PFX(SOME),
+    PARSER_STATUS_PFX(NONE),
     // System Error
     PARSER_STATUS_PFX(CANNOT_OPEN_FILE),
     PARSER_STATUS_PFX(CANNOT_READ_FILE),
@@ -91,6 +96,13 @@ inline parser_state *parser_state_init(void) {
     state->e = error_init();
     // string is added on parse
     return state;
+}
+
+inline void parser_state_free(parser_state *state) {
+    if (state->s) string_free(state->s);
+    ast_fn_node_free(state->root_fn);
+    error_free(state->e);
+    free(state);
 }
 
 parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node **cur_node);

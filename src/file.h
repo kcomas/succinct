@@ -24,3 +24,4 @@ inline int file_close(int fd) {
 }
 
 string *file_read_to_string(int fd);
+

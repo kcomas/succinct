@@ -33,3 +33,4 @@ inline string *string_from_c(const char *const c) {
     s->len = len;
     return s;
 }
+
