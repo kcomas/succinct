@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "token.h"
 
 #define VAR_PFX(NAME) VAR_##NAME
 
@@ -43,7 +44,7 @@ typedef enum {
 
 typedef struct _symbol_table_bucket {
     symbol_table_type table_type;
-    size_t symbol_num, symbol_size_len; // 1 + length for null term
+    size_t symbol_idx, size_len; // 1 + length for null term
     union {
         size_t stack, key; // max for unused, absolute index of the stack, if hash with fixed keys get index of key
     } idx;
@@ -53,7 +54,7 @@ typedef struct _symbol_table_bucket {
 } symbol_table_bucket;
 
 typedef struct {
-    size_t size, used;
+    size_t symbol_counter, size, used;
     symbol_table_bucket *buckets[]; // list on collision
 } symbol_table;
 
@@ -65,7 +66,9 @@ inline symbol_table *symbol_table_init(size_t size) {
 
 void symbol_table_free(symbol_table *s);
 
-#define DEFAULT_MODULE_SYMBOLE_TABLE_SIZE 20
+symbol_table_bucket *symbol_table_insert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s);
+
+#define DEFAULT_SYMBOL_TABLE_SIZE 20
 
 typedef struct {
     size_t num_args, num_locals;

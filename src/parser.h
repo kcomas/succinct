@@ -48,21 +48,35 @@ typedef union {
 
 typedef struct _ast_node {
     ast_type type;
+    token *token;
     ast_data data;
 } ast_node;
 
-inline ast_node *ast_node_init(ast_type type, ast_data data) {
+typedef struct {
+    ast_node *node;
+} ast_node_holder;
+
+inline ast_node *ast_node_init(ast_type type, const token *const token, ast_data data) {
     ast_node *node = calloc(1, sizeof(ast_node));
     node->type = type;
+    token_copy(node->token, token);
     node->data = data;
     return node;
 }
 
 void ast_node_free(ast_node *node);
 
+inline ast_node_holder *ast_node_holder_init(void) {
+    return calloc(1, sizeof(ast_node_holder));
+}
+
+inline void ast_node_holder_free(ast_node_holder *holder) {
+    free(holder);
+}
+
 inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent) {
     ast_fn_node *fn = calloc(1, sizeof(ast_fn_node));
-    fn->type = var_type_fn_init(DEFAULT_MODULE_SYMBOLE_TABLE_SIZE);
+    fn->type = var_type_fn_init(DEFAULT_SYMBOL_TABLE_SIZE);
     fn->parent = parent;
     return fn;
 }
@@ -82,7 +96,7 @@ typedef enum {
 } parser_status;
 
 typedef struct {
-    token next, peek;
+    token *next, *peek;
     string *s;
     ast_fn_node *root_fn;
     error *e;
@@ -90,8 +104,8 @@ typedef struct {
 
 inline parser_state *parser_state_init(void) {
     parser_state *state = calloc(1, sizeof(parser_state));
-    token_init(&state->next);
-    token_init(&state->peek);
+    state->next = token_init();
+    state->peek = token_init();
     state->root_fn = ast_fn_node_init(NULL);
     state->e = error_init();
     // string is added on parse
@@ -99,12 +113,14 @@ inline parser_state *parser_state_init(void) {
 }
 
 inline void parser_state_free(parser_state *state) {
+    token_free(state->next);
+    token_free(state->peek);
     if (state->s) string_free(state->s);
     ast_fn_node_free(state->root_fn);
     error_free(state->e);
     free(state);
 }
 
-parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node **cur_node);
+parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *cur_node);
 
 parser_status parse_module(parser_state *const state, const char *const filename);

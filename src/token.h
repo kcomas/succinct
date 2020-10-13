@@ -49,12 +49,18 @@ typedef struct {
     size_t start_idx, end_idx;
 } token;
 
-inline void token_init(token *const t) {
+inline token *token_init(void) {
+    token *t = calloc(1, sizeof(token));
     t->type = TOKEN_PFX(UNKNOWN);
     t->char_no = 1;
     t->line_no = 1;
     t->start_idx = 0;
     t->end_idx = 0;
+    return t;
+}
+
+inline void token_free(token *t) {
+    free(t);
 }
 
 inline size_t token_len(const token *const t) {

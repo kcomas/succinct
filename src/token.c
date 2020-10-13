@@ -1,7 +1,9 @@
 
 #include "token.h"
 
-extern inline void token_init(token *const t);
+extern inline token *token_init(void);
+
+extern inline void token_free(token *t);
 
 extern inline size_t token_len(const token *const t);
 

@@ -14,11 +14,11 @@ int main(int argc, char *argv[]) {
     int clo = file_close(fd);
     if (clo == -1) errno_print_exit();
     printf("%s\n", str->buffer);
-    token t;
-    token_init(&t);
+    token *t = token_init();
     token_status ts;
-    while ((ts = token_next(&t, str)) == TOKEN_STATUS_PFX(SOME)) token_print(&t, str);
+    while ((ts = token_next(t, str)) == TOKEN_STATUS_PFX(SOME)) token_print(t, str);
     string_free(str);
+    token_free(t);
     */
     parser_state *state = parser_state_init();
     parser_status status = parse_module(state, argv[1]);

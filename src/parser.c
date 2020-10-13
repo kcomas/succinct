@@ -1,7 +1,7 @@
 
 #include "parser.h"
 
-extern inline ast_node *ast_node_init(ast_type type, ast_data data);
+extern inline ast_node *ast_node_init(ast_type type, const token *const t, ast_data data);
 
 extern inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent);
 
@@ -22,21 +22,29 @@ void ast_fn_node_free(ast_fn_node *fn) {
     free(fn);
 }
 
+extern inline ast_node_holder *ast_node_holder_init(void);
+
+extern inline void ast_node_holder_free(ast_node_holder *holder);
+
 extern inline parser_state *parser_state_init(void);
 
 extern inline void parser_state_free(parser_state *state);
 
-parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node **cur_node) {
+parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *cur_node) {
     token_status ts;
-    while ((ts = token_next(&state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
-        switch (state->next.type) {
+    while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
+        switch (state->next->type) {
             case TOKEN_PFX(NEWLINE):
                 if (cur_node == NULL) continue;
+                break;
+            case TOKEN_PFX(VAR):
+                // found var create bucket and node
                 break;
             default:
                 break;
         }
     }
+    ast_node_holder_free(cur_node);
     return PARSER_STATUS_PFX(NONE);
 }
 
@@ -56,5 +64,5 @@ parser_status parse_module(parser_state *const state, const char *const filename
         string_free(state->s);
         return PARSER_STATUS_PFX(CANNOT_CLOSE_FILE);
     }
-    return parse_stmt(state, state->root_fn, NULL);
+    return parse_stmt(state, state->root_fn, ast_node_holder_init());
 }
