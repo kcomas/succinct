@@ -9,11 +9,14 @@
 #define AST_PFX(NAME) AST_##NAME
 
 typedef enum {
+    // Data Types
     AST_PFX(UNKNOWN),
     AST_PFX(VAR),
     AST_PFX(INT),
     AST_PFX(CHAR),
     AST_PFX(FN),
+    // UOP
+    // BOP
 } ast_type;
 
 typedef struct _ast_node ast_node;
@@ -43,7 +46,7 @@ typedef union {
     ast_uop_node *uop;
     ast_bop_node *bop;
     ast_fn_node *fn;
-    symbol_table_bucket *var, *arg;
+    symbol_table_bucket *var;
 } ast_data;
 
 typedef struct _ast_node {

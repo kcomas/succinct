@@ -32,6 +32,8 @@ extern inline void parser_state_free(parser_state *state);
 
 parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *cur_node) {
     token_status ts;
+    symbol_table_bucket *b;
+    ast_node *n;
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
         switch (state->next->type) {
             case TOKEN_PFX(NEWLINE):
@@ -39,10 +41,13 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 break;
             case TOKEN_PFX(VAR):
                 // found var create bucket and node
+                b = symbol_table_insert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(LOCAL), state->next, state->s);
+                n = ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b });
                 break;
             default:
                 break;
         }
+        // wire the node
     }
     ast_node_holder_free(cur_node);
     return PARSER_STATUS_PFX(NONE);
