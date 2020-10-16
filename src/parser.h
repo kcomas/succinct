@@ -78,6 +78,19 @@ inline void ast_node_holder_free(ast_node_holder *holder) {
     free(holder);
 }
 
+inline ast_bop_node *ast_bop_node_init(void) {
+    ast_bop_node *bop = calloc(1, sizeof(ast_bop_node));
+    bop->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
+    return bop;
+}
+
+inline void ast_bop_node_free(ast_bop_node *bop) {
+    var_type_free(bop->return_type);
+    ast_node_free(bop->left);
+    ast_node_free(bop->right);
+    free(bop);
+}
+
 inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent) {
     ast_fn_node *fn = calloc(1, sizeof(ast_fn_node));
     fn->type = var_type_fn_init(DEFAULT_SYMBOL_TABLE_SIZE);

@@ -3,23 +3,31 @@
 
 extern inline ast_node *ast_node_init(ast_type type, const token *const t, ast_data data);
 
+void ast_fn_node_free(ast_fn_node *fn) {
+    var_type_free(fn->type);
+    if (fn->parent) ast_fn_node_free(fn->parent);
+    free(fn);
+}
+
+extern inline ast_bop_node *ast_bop_node_init(void);
+
+extern inline void ast_bop_node_free(ast_bop_node *bop);
+
 extern inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent);
 
 void ast_node_free(ast_node *node) {
+    if (node == NULL) return;
     switch (node->type) {
         case  AST_PFX(FN):
             ast_fn_node_free(node->data.fn);
+            break;
+        case AST_PFX(ASSIGN):
+            ast_bop_node_free(node->data.bop);
             break;
         default:
             break;
     }
     free(node);
-}
-
-void ast_fn_node_free(ast_fn_node *fn) {
-    var_type_free(fn->type);
-    if (fn->parent) ast_fn_node_free(fn->parent);
-    free(fn);
 }
 
 extern inline ast_node_holder *ast_node_holder_init(void);
@@ -51,10 +59,13 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 n = ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b });
                 break;
             case TOKEN_PFX(ASSIGN):
+                n = ast_node_init(AST_PFX(ASSIGN), state->next, (ast_data) { .bop = ast_bop_node_init() });
+                break;
             default:
                 break;
         }
         if (n == NULL) break;
+        // connect node
         if (cur_node->node == NULL) {
             cur_node->node = n;
             if (cur_fn->list_head == NULL) {
