@@ -75,8 +75,8 @@ inline void token_print(const token *const t, const string *const s) {
     putchar('\n');
 }
 
-inline void token_copy(token *const dest, const token *const src) {
-    memcpy(dest, src, sizeof(token));
+inline token *token_copy(token *const dest, const token *const src) {
+    return memcpy(dest, src, sizeof(token));
 }
 
 #define TOKEN_STATUS_PFX(NAME) TOKEN_STATUS_##NAME

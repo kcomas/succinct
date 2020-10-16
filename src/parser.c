@@ -30,6 +30,12 @@ extern inline parser_state *parser_state_init(void);
 
 extern inline void parser_state_free(parser_state *state);
 
+static ast_node_link *ast_node_link_init(ast_node *n) {
+    ast_node_link *list_node = calloc(1, sizeof(ast_node_link));
+    list_node->node = n;
+    return list_node;
+}
+
 parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *cur_node) {
     token_status ts;
     symbol_table_bucket *b;
@@ -44,10 +50,23 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 b = symbol_table_insert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(LOCAL), state->next, state->s);
                 n = ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b });
                 break;
+            case TOKEN_PFX(ASSIGN):
             default:
                 break;
         }
-        // wire the node
+        if (n == NULL) break;
+        if (cur_node->node == NULL) {
+            cur_node->node = n;
+            if (cur_fn->list_head == NULL) {
+                cur_fn->list_head = ast_node_link_init(n);
+                cur_fn->list_tail = cur_fn->list_head;
+            } else {
+                cur_fn->list_tail->next = ast_node_link_init(n);
+                cur_fn->list_tail = cur_fn->list_tail->next;
+            }
+        } else {
+            // set the node based on cur type
+        }
     }
     ast_node_holder_free(cur_node);
     return PARSER_STATUS_PFX(NONE);

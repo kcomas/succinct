@@ -17,6 +17,7 @@ typedef enum {
     AST_PFX(FN),
     // UOP
     // BOP
+    AST_PFX(ASSIGN)
 } ast_type;
 
 typedef struct _ast_node ast_node;
@@ -51,18 +52,18 @@ typedef union {
 
 typedef struct _ast_node {
     ast_type type;
-    token *token;
     ast_data data;
+    token *t;
 } ast_node;
 
 typedef struct {
     ast_node *node;
 } ast_node_holder;
 
-inline ast_node *ast_node_init(ast_type type, const token *const token, ast_data data) {
+inline ast_node *ast_node_init(ast_type type, const token *const t, ast_data data) {
     ast_node *node = calloc(1, sizeof(ast_node));
     node->type = type;
-    token_copy(node->token, token);
+    node->t = token_copy(token_init(), t);
     node->data = data;
     return node;
 }
