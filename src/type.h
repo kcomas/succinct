@@ -66,7 +66,7 @@ inline symbol_table *symbol_table_init(size_t size) {
 
 void symbol_table_free(symbol_table *s);
 
-symbol_table_bucket *symbol_table_insert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s);
+symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s);
 
 #define DEFAULT_SYMBOL_TABLE_SIZE 20
 

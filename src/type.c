@@ -34,7 +34,7 @@ static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t sym
 }
 
 
-symbol_table_bucket *symbol_table_insert(symbol_table **table, symbol_table_type table_type, const token *const t, const string *const s) {
+symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_type table_type, const token *const t, const string *const s) {
     // TODO resize
     // check if the symbol is in table
     size_t hash_idx = hash_symbol(t, s) % (*table)->size;

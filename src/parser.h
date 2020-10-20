@@ -10,14 +10,17 @@
 
 typedef enum {
     // Data Types
+    AST_PFX(_VALUE),
     AST_PFX(UNKNOWN),
     AST_PFX(VAR),
     AST_PFX(INT),
     AST_PFX(CHAR),
     AST_PFX(FN),
-    // UOP
-    // BOP
-    AST_PFX(ASSIGN)
+    AST_PFX(_END_VALUE),
+    // OP
+    AST_PFX(_OP),
+    AST_PFX(ASSIGN),
+    AST_PFX(_END_OP)
 } ast_type;
 
 typedef struct _ast_node ast_node;
@@ -29,13 +32,8 @@ typedef struct _ast_node_link {
 
 typedef struct {
     var_type *return_type;
-    ast_node *right;
-} ast_uop_node;
-
-typedef struct {
-    var_type *return_type;
     ast_node *left, *right;
-} ast_bop_node;
+} ast_op_node;
 
 typedef struct _ast_fn_node {
     var_type *type;
@@ -44,8 +42,7 @@ typedef struct _ast_fn_node {
 } ast_fn_node;
 
 typedef union {
-    ast_uop_node *uop;
-    ast_bop_node *bop;
+    ast_op_node *op;
     ast_fn_node *fn;
     symbol_table_bucket *var;
 } ast_data;
@@ -78,17 +75,17 @@ inline void ast_node_holder_free(ast_node_holder *holder) {
     free(holder);
 }
 
-inline ast_bop_node *ast_bop_node_init(void) {
-    ast_bop_node *bop = calloc(1, sizeof(ast_bop_node));
-    bop->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
-    return bop;
+inline ast_op_node *ast_op_node_init(void) {
+    ast_op_node *op = calloc(1, sizeof(ast_op_node));
+    op->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
+    return op;
 }
 
-inline void ast_bop_node_free(ast_bop_node *bop) {
-    var_type_free(bop->return_type);
-    ast_node_free(bop->left);
-    ast_node_free(bop->right);
-    free(bop);
+inline void ast_op_node_free(ast_op_node *op) {
+    var_type_free(op->return_type);
+    ast_node_free(op->left);
+    ast_node_free(op->right);
+    free(op);
 }
 
 inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent) {
@@ -138,6 +135,6 @@ inline void parser_state_free(parser_state *state) {
     free(state);
 }
 
-parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *cur_node);
+parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const cur_node);
 
 parser_status parse_module(parser_state *const state, const char *const filename);
