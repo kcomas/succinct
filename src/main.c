@@ -23,5 +23,5 @@ int main(int argc, char *argv[]) {
     parser_state *state = parser_state_init();
     parser_status status = parse_module(state, argv[1]);
     parser_state_free(state);
-    return 0;
+    return status;
 }

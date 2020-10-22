@@ -5,6 +5,7 @@ extern inline ast_node *ast_node_init(ast_type type, const token *const t, ast_d
 
 void ast_fn_node_free(ast_fn_node *fn) {
     var_type_free(fn->type);
+    // TODO free links
     if (fn->parent) ast_fn_node_free(fn->parent);
     free(fn);
 }
@@ -38,22 +39,52 @@ extern inline parser_state *parser_state_init(void);
 
 extern inline void parser_state_free(parser_state *state);
 
-static ast_node_link *ast_node_link_init(ast_node *n) {
-    ast_node_link *list_node = calloc(1, sizeof(ast_node_link));
-    list_node->node = n;
-    return list_node;
+static ast_node_link *ast_node_link_init(ast_fn_node *const cur_fn) {
+    ast_node_link *link = calloc(1, sizeof(ast_node_link));
+    if (cur_fn->list_head == NULL) {
+        cur_fn->list_head = link;
+        cur_fn->list_tail = cur_fn->list_head;
+    } else {
+        cur_fn->list_tail->next = link;
+        cur_fn->list_tail = cur_fn->list_tail->next;
+    }
+    return link;
 }
 
-static bool is_value(ast_type type) {
-    return type > AST_PFX(_VALUE) && type < AST_PFX(_END_VALUE);
+static bool is_value(ast_node *const n) {
+    return n->type > AST_PFX(_VALUE) && n->type < AST_PFX(_END_VALUE);
 }
 
-static bool is_op(ast_type type) {
-    return type > AST_PFX(_OP) && type < AST_PFX(_END_OP);
+static bool is_op(ast_node *const n) {
+    return n->type > AST_PFX(_OP) && n->type < AST_PFX(_END_OP);
 }
 
-ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const cur_node) {
+static bool wire_nodes(ast_node_holder *const cur_node, ast_node_link *const link, ast_node *const n) {
+    if (link->node == NULL && is_op(n)) link->node = n;
+    if (cur_node->node == NULL) {
+        cur_node->node = n;
+    } else if (is_op(n)) {
+        n->data.op->left = cur_node->node;
+        cur_node->node = n;
+    } else if (is_op(cur_node->node)) {
+        cur_node->node->data.op->right = n;
+        cur_node->node = n;
+    } else if (is_value(cur_node->node) && is_value(n)) {
+        return false;
+    }
+    return true;
+}
+
+static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const cur_node) {
     // we are at the thing after first (
+    token_status ts;
+    token arg;
+    // parse args
+    while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
+        // find arg name
+    }
+    // parse return
+    // parse body
 }
 
 parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const cur_node) {
@@ -61,6 +92,8 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
     symbol_table_bucket *b;
     ast_node *n;
     ast_fn_node *fn;
+    // init the fn node list
+    ast_node_link *link = ast_node_link_init(cur_fn);
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
         switch (state->next->type) {
             case TOKEN_PFX(NEWLINE):
@@ -93,26 +126,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 break;
         }
         if (n == NULL) break;
-        // connect node
-        if (cur_node->node == NULL) {
-            cur_node->node = n;
-            if (cur_fn->list_head == NULL) {
-                cur_fn->list_head = ast_node_link_init(n);
-                cur_fn->list_tail = cur_fn->list_head;
-            } else {
-                cur_fn->list_tail->next = ast_node_link_init(n);
-                cur_fn->list_tail = cur_fn->list_tail->next;
-            }
-            // set the node based on cur type
-        } else if (is_value(cur_node->node->type) && is_value(n->type)) {
-            // TODO invalid
-        } else if (is_op(n->type)) {
-            n->data.op->left = cur_node->node;
-            cur_node->node = n;
-        } else if (is_op(cur_node->node->type)) {
-            cur_node->node->data.op->right = n;
-            cur_node->node = n;
-        }
+        if (!wire_nodes(cur_node, link, n)) return PARSER_STATUS_PFX(INVALID_WIRE_NODE);
     }
     ast_node_holder_free(cur_node);
     return PARSER_STATUS_PFX(NONE);

@@ -105,8 +105,9 @@ typedef enum {
     // System Error
     PARSER_STATUS_PFX(CANNOT_OPEN_FILE),
     PARSER_STATUS_PFX(CANNOT_READ_FILE),
-    PARSER_STATUS_PFX(CANNOT_CLOSE_FILE)
+    PARSER_STATUS_PFX(CANNOT_CLOSE_FILE),
     // Parser Error
+    PARSER_STATUS_PFX(INVALID_WIRE_NODE)
 } parser_status;
 
 typedef struct {
