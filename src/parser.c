@@ -75,13 +75,33 @@ static bool wire_nodes(ast_node_holder *const cur_node, ast_node_link *const lin
     return true;
 }
 
+static var_type *parse_var_type(parser_state* const state) {
+    printf("Arg Type\n");
+    return NULL;
+}
+
 static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const cur_node) {
     // we are at the thing after first (
     token_status ts;
-    token arg;
+    token arg_name;
+    var_type *arg_type;
     // parse args
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
         // find arg name
+        if (state->next->type != TOKEN_PFX(VAR)) {
+            // TODO set error
+            return NULL;
+        }
+        token_copy(&arg_name, state->next);
+        if ((ts = token_next(state->next, state->s)) != TOKEN_STATUS_PFX(SOME)) {
+            // TODO set error
+            return NULL;
+        }
+        if (state->next->type != TOKEN_PFX(DEFINE)) {
+            // TODO set error
+            return NULL;
+        }
+        arg_type = parse_var_type(state);
     }
     // parse return
     // parse body
@@ -107,6 +127,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 n = ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b });
                 break;
             case TOKEN_PFX(LBRACE):
+                token_copy(state->peek, state->next);
                 if ((ts = token_next(state->peek, state->s)) != TOKEN_STATUS_PFX(SOME)) {
                     // TODO error
                 }
