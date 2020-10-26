@@ -85,7 +85,8 @@ typedef enum {
     TOKEN_STATUS_PFX(SOME),
     TOKEN_STATUS_PFX(NONE),
     TOKEN_STATUS_PFX(FILE_MUST_START_NEWLINE),
-    TOKEN_STATUS_PFX(EXCEDED_MAX_STRING_LEN)
+    TOKEN_STATUS_PFX(EXCEDED_MAX_STRING_LEN),
+    TOKEN_STATUS_PFX(INVALID_MATCH), // for parser
 } token_status;
 
 token_status token_next(token *const t, const string *const s);

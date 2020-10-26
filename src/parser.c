@@ -75,35 +75,62 @@ static bool wire_nodes(ast_node_holder *const cur_node, ast_node_link *const lin
     return true;
 }
 
+static token_status token_next_check(parser_state *const state, token_type type) {
+    token_status ts;
+    if ((ts = token_next(state->next, state->s)) != TOKEN_STATUS_PFX(SOME)) return ts;
+    if (state->next->type != type) return TOKEN_STATUS_PFX(INVALID_MATCH);
+    return ts;
+}
+
 static var_type *parse_var_type(parser_state* const state) {
-    printf("Arg Type\n");
+    token_status ts;
+    if ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
+        // TODO error
+        return NULL;
+    }
+    switch (state->next->type) {
+        case TOKEN_PFX(U64): return var_type_init(VAR_PFX(U64), (var_type_body) {});
+        default:
+            break;
+    }
     return NULL;
 }
 
 static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const cur_node) {
     // we are at the thing after first (
     token_status ts;
-    token arg_name;
-    var_type *arg_type;
     // parse args
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
+        if (state->next->type == TOKEN_PFX(RPARENS)) break; // done with args
         // find arg name
         if (state->next->type != TOKEN_PFX(VAR)) {
             // TODO set error
             return NULL;
         }
+        token arg_name;
         token_copy(&arg_name, state->next);
-        if ((ts = token_next(state->next, state->s)) != TOKEN_STATUS_PFX(SOME)) {
+        if ((ts = token_next_check(state, TOKEN_PFX(DEFINE))) != TOKEN_STATUS_PFX(SOME)) {
             // TODO set error
             return NULL;
         }
-        if (state->next->type != TOKEN_PFX(DEFINE)) {
-            // TODO set error
+        var_type *arg_type = parse_var_type(state);
+        if (arg_type == NULL) {
+            // TODO error
             return NULL;
         }
-        arg_type = parse_var_type(state);
+        symbol_table_bucket *b = symbol_table_findsert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(ARG), &arg_name, state->s);
+        b->type = arg_type;
     }
     // parse return
+    if ((ts = token_next_check(state, TOKEN_PFX(LBRACKET))) != TOKEN_STATUS_PFX(SOME)) {
+        // TODO set error
+        return NULL;
+    }
+    cur_fn->type->body.fn->return_type  = parse_var_type(state);
+    if ((ts = token_next_check(state, TOKEN_PFX(RBRACKET))) != TOKEN_STATUS_PFX(SOME)) {
+        // TODO set error
+        return NULL;
+    }
     // parse body
 }
 
