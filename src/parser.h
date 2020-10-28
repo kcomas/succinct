@@ -41,9 +41,23 @@ typedef struct _ast_fn_node {
     ast_node_link *list_head, *list_tail;
 } ast_fn_node;
 
+typedef struct _ast_if_cond {
+    struct _ast_if_cond *next;
+    ast_node *cond;
+    var_type *return_type;
+    ast_node_link *body_head, *body_tail;
+} ast_if_cond;
+
+typedef struct {
+    ast_if_cond *conds;
+    var_type *else_return_type; // all bodies must have same type
+    ast_node_link *else_head, *else_tail;
+} ast_if_node;
+
 typedef union {
     ast_op_node *op;
     ast_fn_node *fn;
+    ast_if_node *cond;
     symbol_table_bucket *var;
 } ast_data;
 
@@ -114,7 +128,8 @@ typedef enum {
 
 typedef enum {
     PARSER_MODE_PFX(FN),
-    PARSER_MODE_PFX(IF)
+    PARSER_MODE_PFX(IF_COND),
+    PARSER_MODE_PFX(IF_BODY)
 } parser_mode;
 
 typedef struct {

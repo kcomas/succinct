@@ -151,6 +151,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
         switch (state->next->type) {
             case TOKEN_PFX(NEWLINE):
                 if (cur_node == NULL) continue;
+                // wire next link
                 break;
             case TOKEN_PFX(VAR):
                 // TODO check if fn call
