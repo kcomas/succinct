@@ -110,7 +110,15 @@ typedef enum {
     PARSER_STATUS_PFX(INVALID_WIRE_NODE)
 } parser_status;
 
+#define PARSER_MODE_PFX(NAME) PARSER_MODE_##NAME
+
+typedef enum {
+    PARSER_MODE_PFX(FN),
+    PARSER_MODE_PFX(IF)
+} parser_mode;
+
 typedef struct {
+    parser_mode mode;
     token *next, *peek;
     string *s;
     ast_fn_node *root_fn;

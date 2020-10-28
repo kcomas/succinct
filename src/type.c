@@ -21,6 +21,14 @@ static size_t hash_symbol(const token *const t, const string *const s) {
     return hash;
 }
 
+static symbol_table_bucket *compare_bucket(symbol_table_bucket* b, const token *const t, const string *const s) {
+    size_t i = 0;
+    size_t len = token_len(t);
+    for (; i <= len; i++) if (s->buffer[i + t->start_idx] != b->symbol[i]) break;
+    if (i == len) return b;
+    return NULL;
+}
+
 static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t symbol_counter, const token *const t, const string *const s) {
     size_t size_len = token_len(t) * sizeof(char) + sizeof(char); // add one for a null terminated string
     symbol_table_bucket *b = calloc(1, sizeof(symbol_table_bucket) + size_len);
@@ -33,7 +41,6 @@ static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t sym
     return b;
 }
 
-
 symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_type table_type, const token *const t, const string *const s) {
     // TODO resize
     // check if the symbol is in table
@@ -45,14 +52,24 @@ symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_ty
     }
     symbol_table_bucket *b = (*table)->buckets[hash_idx];
     while (b->next != NULL) {
-        size_t i = 0;
-        size_t len = token_len(t);
-        for (; i <= len; i++) if (s->buffer[i + t->start_idx] != b->symbol[i]) break;
-        if (i == len) return b;
+        symbol_table_bucket *tmp = compare_bucket(b, t, s);
+        if (tmp != NULL) return tmp;
         b = b->next;
     }
     b->next = bucket_init(table_type, (*table)->symbol_counter++, t, s);
     return b->next;
+}
+
+symbol_table_bucket *symbol_table_find(symbol_table *table, const token *const t, const string *const s) {
+    size_t hash_idx = hash_symbol(t, s) % table->size;
+    if (table->buckets[hash_idx] == NULL) return NULL;
+    symbol_table_bucket *b = table->buckets[hash_idx];
+    while (b->next != NULL) {
+        symbol_table_bucket *tmp = compare_bucket(b, t, s);
+        if (tmp != NULL) return tmp;
+        b = b->next;
+    }
+    return NULL;
 }
 
 extern inline var_type *var_type_init(var_type_header header, var_type_body body);
