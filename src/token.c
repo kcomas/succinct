@@ -176,13 +176,11 @@ token_status token_next(token *const t, const string *const s) {
         case '<':
             if (char_lookup_one(t, s, '='))
                 return found_token(t, TOKEN_PFX(LESSEQUAL));
-            else
-                return found_token(t, TOKEN_PFX(LESS));
-        case '&':
-            if (char_lookup_one(t, s, '>'))
+            else if (char_lookup_one(t, s, '&'))
                 return found_token(t, TOKEN_PFX(WRITE));
             else
-                return found_token(t, TOKEN_PFX(AND));
+                return found_token(t, TOKEN_PFX(LESS));
+        case '&': return found_token(t, TOKEN_PFX(AND));
     }
     return TOKEN_STATUS_PFX(NONE);
 }

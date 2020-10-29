@@ -10,6 +10,10 @@ void ast_fn_node_free(ast_fn_node *fn) {
     free(fn);
 }
 
+extern inline ast_node_link *ast_node_link_init(void);
+
+extern inline void ast_node_link_free(ast_node_link *link);
+
 extern inline ast_op_node *ast_op_node_init(void);
 
 extern inline void ast_op_node_free(ast_op_node *op);
@@ -39,18 +43,6 @@ extern inline parser_state *parser_state_init(void);
 
 extern inline void parser_state_free(parser_state *state);
 
-static ast_node_link *ast_node_link_init(ast_fn_node *const cur_fn) {
-    ast_node_link *link = calloc(1, sizeof(ast_node_link));
-    if (cur_fn->list_head == NULL) {
-        cur_fn->list_head = link;
-        cur_fn->list_tail = cur_fn->list_head;
-    } else {
-        cur_fn->list_tail->next = link;
-        cur_fn->list_tail = cur_fn->list_tail->next;
-    }
-    return link;
-}
-
 static bool is_value(ast_node *const n) {
     return n->type > AST_PFX(_VALUE) && n->type < AST_PFX(_END_VALUE);
 }
@@ -59,27 +51,22 @@ static bool is_op(ast_node *const n) {
     return n->type > AST_PFX(_OP) && n->type < AST_PFX(_END_OP);
 }
 
-static bool wire_nodes(ast_node_holder *const cur_node, ast_node_link *const link, ast_node *const n) {
-    if (link->node == NULL && is_op(n)) link->node = n;
-    if (cur_node->node == NULL) {
-        cur_node->node = n;
-    } else if (is_op(n)) {
-        n->data.op->left = cur_node->node;
-        cur_node->node = n;
-    } else if (is_op(cur_node->node)) {
-        cur_node->node->data.op->right = n;
-        cur_node->node = n;
-    } else if (is_value(cur_node->node) && is_value(n)) {
-        return false;
-    }
-    return true;
-}
-
 static token_status token_next_check(parser_state *const state, token_type type) {
     token_status ts;
     if ((ts = token_next(state->next, state->s)) != TOKEN_STATUS_PFX(SOME)) return ts;
     if (state->next->type != type) return TOKEN_STATUS_PFX(INVALID_MATCH);
     return ts;
+}
+
+static token_status token_peek_check(parser_state *const state, token_type type) {
+    token_status ts;
+    token_copy(state->peek, state->next);
+    if ((ts = token_next(state->peek, state->s)) != TOKEN_STATUS_PFX(SOME)) return ts;
+    if (state->peek->type == type) {
+        token_copy(state->next, state->peek);
+        return TOKEN_STATUS_PFX(PEEK_SOME);
+    }
+    return TOKEN_STATUS_PFX(NONE);
 }
 
 static var_type *parse_var_type(parser_state* const state) {
@@ -97,7 +84,7 @@ static var_type *parse_var_type(parser_state* const state) {
 }
 
 static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_fn) {
-    // we are at the thing after first (
+    // we are at the first maybe var after first (
     token_status ts;
     // parse args
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
@@ -120,6 +107,7 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_f
         }
         symbol_table_bucket *b = symbol_table_findsert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(ARG), &arg_name, state->s);
         b->type = arg_type;
+        // TODO inc arg count
     }
     // parse return
     if ((ts = token_next_check(state, TOKEN_PFX(LBRACKET))) != TOKEN_STATUS_PFX(SOME)) {
@@ -132,7 +120,7 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_f
         return NULL;
     }
     // parse body
-    parser_status status = parse_stmt(state, cur_fn, ast_node_holder_init());
+    parser_status status = parse_stmts(state, cur_fn, cur_fn->list_tail);
     if (status != PARSER_STATUS_PFX(SOME)) {
         // TODO error
         return NULL;
@@ -140,19 +128,19 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_f
     return cur_fn;
 }
 
-parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const cur_node) {
+static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder* const head) {
     token_status ts;
     symbol_table_bucket *b;
+    ast_node_holder cur_node = { .node = NULL };
     ast_node *n;
+    ast_node *value_tmp = NULL;
     ast_fn_node *fn, *parent;
     // init the fn node list
-    ast_node_link *link = ast_node_link_init(cur_fn);
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
         switch (state->next->type) {
             case TOKEN_PFX(NEWLINE):
-                if (cur_node == NULL) continue;
-                // wire next link
-                break;
+                if (value_tmp != NULL && is_op(cur_node.node)) cur_node.node->data.op->right = value_tmp;
+                return PARSER_STATUS_PFX(SOME);
             case TOKEN_PFX(VAR):
                 // TODO check if fn call
                 // found var create bucket and node
@@ -166,35 +154,75 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 // not in parent add to cur
                 if (parent == NULL)
                     b = symbol_table_findsert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(LOCAL), state->next, state->s);
+                    // TODO inc local count
                 n = ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b });
                 break;
+            case TOKEN_PFX(INT):
+                n = ast_node_init(AST_PFX(INT), state->next, (ast_data) {});
+                break;
             case TOKEN_PFX(LBRACE):
-                token_copy(state->peek, state->next);
-                if ((ts = token_next(state->peek, state->s)) != TOKEN_STATUS_PFX(SOME)) {
-                    // TODO error
-                }
-                if (state->peek->type == TOKEN_PFX(LPARENS)) {
-                    // fn def
-                    token_copy(state->next, state->peek);
+                ts = token_peek_check(state, TOKEN_PFX(LPARENS));
+                if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
                     if ((fn = parse_fn(state, ast_fn_node_init(cur_fn))) == NULL) {
                         // TODO error
                     }
                     n = ast_node_init(AST_PFX(FN), state->next, (ast_data) { .fn = fn });
+                } else if (ts != TOKEN_STATUS_PFX(SOME)) {
+                    // TODO error
                 }
                 break;
             case TOKEN_PFX(ASSIGN):
                 n = ast_node_init(AST_PFX(ASSIGN), state->next, (ast_data) { .op = ast_op_node_init() });
                 break;
+            case TOKEN_PFX(ADD):
+                n = ast_node_init(AST_PFX(ADD), state->next, (ast_data) { .op = ast_op_node_init() });
+                break;
+            case TOKEN_PFX(WRITE):
+                n = ast_node_init(AST_PFX(WRITE), state->next, (ast_data) { .op = ast_op_node_init() });
+                break;
             case TOKEN_PFX(COND):
+                ts = token_peek_check(state, TOKEN_PFX(LBRACE));
+                if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
+                    // if stmt
+                } else if (ts != TOKEN_STATUS_PFX(SOME)) {
+                    // TODO error
+                }
                 break;
             default:
                 break;
         }
         if (n == NULL) break;
-        if (!wire_nodes(cur_node, link, n)) return PARSER_STATUS_PFX(INVALID_WIRE_NODE);
+        if (is_value(n) && cur_node.node == NULL) {
+            cur_node.node = n;
+        } else if (is_op(n) && head->node == NULL) {
+            n->data.op->left = cur_node.node;
+            head->node = n;
+            cur_node.node = n;
+        } else if (is_value(n) && value_tmp == NULL) {
+            value_tmp = n;
+        } else if (is_op(cur_node.node) && is_op(n)) {
+            n->data.op->left = value_tmp;
+            value_tmp = NULL;
+            cur_node.node->data.op->right = n;
+            cur_node.node = n;
+        } else {
+            return PARSER_STATUS_PFX(INVALID_TOKEN_SEQUENCE);
+        }
     }
-    ast_node_holder_free(cur_node);
+    // newline or ; denote success
     return PARSER_STATUS_PFX(NONE);
+}
+
+parser_status parse_stmts(parser_state *const state, ast_fn_node *const cur_fn, ast_node_link *tail) {
+    ast_node_holder *holder = ast_node_holder_init();
+    while (parse_stmt(state, cur_fn, holder) == PARSER_STATUS_PFX(SOME)) {
+        tail->node = holder->node;
+        holder->node = NULL;
+        tail->next = ast_node_link_init();
+        tail = tail->next;
+    }
+    ast_node_holder_free(holder);
+    return PARSER_STATUS_PFX(DONE);
 }
 
 parser_status parse_module(parser_state *const state, const char *const filename) {
@@ -213,5 +241,5 @@ parser_status parse_module(parser_state *const state, const char *const filename
         string_free(state->s);
         return PARSER_STATUS_PFX(CANNOT_CLOSE_FILE);
     }
-    return parse_stmt(state, state->root_fn, ast_node_holder_init());
+    return parse_stmts(state, state->root_fn, state->root_fn->list_tail);
 }

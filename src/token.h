@@ -31,7 +31,7 @@ typedef enum {
     TOKEN_PFX(ADD), // +
     TOKEN_PFX(SUB), // -
     TOKEN_PFX(MUL), // *
-    TOKEN_PFX(WRITE), // &>
+    TOKEN_PFX(WRITE), // <&
     // Control Flow
     TOKEN_PFX(NEWLINE), // \n
     TOKEN_PFX(SEPRATOR), // ;
@@ -83,6 +83,7 @@ inline token *token_copy(token *const dest, const token *const src) {
 
 typedef enum {
     TOKEN_STATUS_PFX(SOME),
+    TOKEN_STATUS_PFX(PEEK_SOME), // for parser
     TOKEN_STATUS_PFX(NONE),
     TOKEN_STATUS_PFX(FILE_MUST_START_NEWLINE),
     TOKEN_STATUS_PFX(EXCEDED_MAX_STRING_LEN),
