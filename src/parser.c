@@ -131,15 +131,19 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_f
 static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder* const head) {
     token_status ts;
     symbol_table_bucket *b;
-    ast_node_holder cur_node = { .node = NULL };
     ast_node *n;
+    ast_node *cur_node = NULL;
     ast_node *value_tmp = NULL;
     ast_fn_node *fn, *parent;
     // init the fn node list
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
         switch (state->next->type) {
             case TOKEN_PFX(NEWLINE):
-                if (value_tmp != NULL && is_op(cur_node.node)) cur_node.node->data.op->right = value_tmp;
+                if (value_tmp != NULL && is_op(cur_node)) {
+                    cur_node->data.op->right = value_tmp;
+                } else if (value_tmp != NULL) {
+                    // TODO error
+                }
                 return PARSER_STATUS_PFX(SOME);
             case TOKEN_PFX(VAR):
                 // TODO check if fn call
@@ -192,19 +196,19 @@ static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cu
                 break;
         }
         if (n == NULL) break;
-        if (is_value(n) && cur_node.node == NULL) {
-            cur_node.node = n;
+        if (is_value(n) && cur_node == NULL) {
+            cur_node = n;
         } else if (is_op(n) && head->node == NULL) {
-            n->data.op->left = cur_node.node;
+            n->data.op->left = cur_node;
             head->node = n;
-            cur_node.node = n;
+            cur_node = n;
         } else if (is_value(n) && value_tmp == NULL) {
             value_tmp = n;
-        } else if (is_op(cur_node.node) && is_op(n)) {
+        } else if (is_op(cur_node) && is_op(n)) {
             n->data.op->left = value_tmp;
             value_tmp = NULL;
-            cur_node.node->data.op->right = n;
-            cur_node.node = n;
+            cur_node->data.op->right = n;
+            cur_node = n;
         } else {
             return PARSER_STATUS_PFX(INVALID_TOKEN_SEQUENCE);
         }
