@@ -88,7 +88,6 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_f
     token_status ts;
     // parse args
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
-        if (state->next->type == TOKEN_PFX(RPARENS)) break; // done with args
         // find arg name
         if (state->next->type != TOKEN_PFX(VAR)) {
             // TODO set error
@@ -108,6 +107,21 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_f
         symbol_table_bucket *b = symbol_table_findsert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(ARG), &arg_name, state->s);
         b->type = arg_type;
         // TODO inc arg count
+        // check if another arg or done
+        ts = token_peek_check(state, TOKEN_PFX(SEPRATOR));
+        if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
+            continue; // another arg
+        } else if (ts != TOKEN_STATUS_PFX(SOME)) {
+            // TODO error
+            return NULL;
+        }
+        ts = token_peek_check(state, TOKEN_PFX(RPARENS));
+        if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
+            break; // done with args
+        } else if (ts != TOKEN_STATUS_PFX(SOME)) {
+            // TODO error
+            return NULL;
+        }
     }
     // parse return
     if ((ts = token_next_check(state, TOKEN_PFX(LBRACKET))) != TOKEN_STATUS_PFX(SOME)) {
