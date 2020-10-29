@@ -66,7 +66,23 @@ static token_status token_peek_check(parser_state *const state, token_type type)
         token_copy(state->next, state->peek);
         return TOKEN_STATUS_PFX(PEEK_SOME);
     }
+
     return TOKEN_STATUS_PFX(NONE);
+}
+
+static parser_status wire_final_value(ast_node *const value_tmp, ast_node *const cur_node) {
+    if (value_tmp != NULL && is_op(cur_node)) {
+        if (cur_node->data.op->right == NULL) {
+            cur_node->data.op->right = value_tmp;
+        } else {
+            // TODO error
+            return PARSER_STATUS_PFX(INVALID_FINAL_VALUE);
+        }
+    } else if (value_tmp != NULL) {
+        // TODO error
+        return PARSER_STATUS_PFX(INVALID_FINAL_VALUE);
+    }
+    return PARSER_STATUS_PFX(SOME);
 }
 
 static var_type *parse_var_type(parser_state* const state) {
@@ -146,19 +162,14 @@ static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cu
     token_status ts;
     symbol_table_bucket *b;
     ast_node *n;
-    ast_node *cur_node = NULL;
     ast_node *value_tmp = NULL;
+    ast_node *cur_node = NULL;
     ast_fn_node *fn, *parent;
     // init the fn node list
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
         switch (state->next->type) {
             case TOKEN_PFX(NEWLINE):
-                if (value_tmp != NULL && is_op(cur_node)) {
-                    cur_node->data.op->right = value_tmp;
-                } else if (value_tmp != NULL) {
-                    // TODO error
-                }
-                return PARSER_STATUS_PFX(SOME);
+                return wire_final_value(value_tmp, cur_node);
             case TOKEN_PFX(VAR):
                 // TODO check if fn call
                 // found var create bucket and node
