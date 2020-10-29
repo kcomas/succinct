@@ -50,7 +50,7 @@ typedef struct _ast_if_cond {
 } ast_if_cond;
 
 typedef struct {
-    ast_if_cond *conds;
+    ast_if_cond *conds_head, *conds_tail;
     var_type *return_type; // all bodies must have same type
     ast_node_link *else_head, *else_tail;
 } ast_if_node;
