@@ -18,7 +18,7 @@ void ast_node_free(ast_node *node) {
     } else {
         switch (node->type) {
             case  AST_PFX(FN):
-                ast_fn_node_free(node->data.fn);
+                ast_fn_node_free(node->data.fn, true);
                 break;
             default:
                 break;
@@ -37,7 +37,7 @@ extern inline void ast_op_node_free(ast_op_node *op);
 
 extern inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent);
 
-void ast_fn_node_free(ast_fn_node *fn) {
+void ast_fn_node_free(ast_fn_node *fn, bool free_parent) {
     var_type_free(fn->type);
     // free links
     ast_node_link *head = fn->list_head;
@@ -47,8 +47,15 @@ void ast_fn_node_free(ast_fn_node *fn) {
         head = head->next;
         ast_node_link_free(tmp);
     }
-    if (fn->parent) ast_fn_node_free(fn->parent);
+    if (free_parent && fn->parent) ast_fn_node_free(fn->parent, free_parent);
     free(fn);
+}
+
+extern inline ast_if_node *ast_if_node_init(void);
+
+void ast_if_node_free(ast_if_node *if_node) {
+    // TODO
+    free(if_node);
 }
 
 extern inline ast_node_holder *ast_node_holder_init(void);
@@ -75,7 +82,7 @@ static token_status token_peek_check(parser_state *const state, token_type type)
         return TOKEN_STATUS_PFX(PEEK_SOME);
     }
 
-    return TOKEN_STATUS_PFX(NONE);
+    return ts;
 }
 
 static parser_status wire_final_value(ast_node *const value_tmp, ast_node *const cur_node) {
@@ -120,20 +127,20 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
         // find arg name
         if (state->next->type != TOKEN_PFX(VAR)) {
             // TODO set error
-            ast_fn_node_free(cur_fn);
+            ast_fn_node_free(cur_fn, false);
             return NULL;
         }
         token arg_name;
         token_copy(&arg_name, state->next);
         if ((ts = token_next_check(state, TOKEN_PFX(DEFINE))) != TOKEN_STATUS_PFX(SOME)) {
             // TODO set error
-            ast_fn_node_free(cur_fn);
+            ast_fn_node_free(cur_fn, false);
             return NULL;
         }
         var_type *arg_type = parse_var_type(state);
         if (arg_type == NULL) {
             // TODO error
-            ast_fn_node_free(cur_fn);
+            ast_fn_node_free(cur_fn, false);
             return NULL;
         }
         symbol_table_bucket *b = symbol_table_findsert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(ARG), &arg_name, state->s);
@@ -146,7 +153,7 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
             continue; // another arg
         } else if (ts != TOKEN_STATUS_PFX(SOME)) {
             // TODO error
-            ast_fn_node_free(cur_fn);
+            ast_fn_node_free(cur_fn, false);
             return NULL;
         }
         ts = token_peek_check(state, TOKEN_PFX(RPARENS));
@@ -154,27 +161,27 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
             break; // done with args
         } else if (ts != TOKEN_STATUS_PFX(SOME)) {
             // TODO error
-            ast_fn_node_free(cur_fn);
+            ast_fn_node_free(cur_fn, false);
             return NULL;
         }
     }
     // parse return
     if ((ts = token_next_check(state, TOKEN_PFX(LBRACKET))) != TOKEN_STATUS_PFX(SOME)) {
         // TODO set error
-        ast_fn_node_free(cur_fn);
+        ast_fn_node_free(cur_fn, false);
         return NULL;
     }
     cur_fn->type->body.fn->return_type = parse_var_type(state);
     if ((ts = token_next_check(state, TOKEN_PFX(RBRACKET))) != TOKEN_STATUS_PFX(SOME)) {
         // TODO set error
-        ast_fn_node_free(cur_fn);
+        ast_fn_node_free(cur_fn, false);
         return NULL;
     }
     // parse body
     parser_status status = parse_stmts(state, cur_fn, cur_fn->list_tail);
     if (status != PARSER_STATUS_PFX(SOME)) {
         // TODO error
-        ast_fn_node_free(cur_fn);
+        ast_fn_node_free(cur_fn, false);
         return NULL;
     }
     return cur_fn;
@@ -182,18 +189,30 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
 
 static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_fn) {
     // we are at the fist cond newline or (
+    ast_if_node *if_node = ast_if_node_init();
     token_status ts;
     bool in_else = false;
+    ast_if_cond *cond_node;
     for (;;) {
         // parse cond
         while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
             // before cond remove newline
+            while (state->next->type == TOKEN_PFX(NEWLINE)) continue;
+            if (state->next->type != TOKEN_PFX(LPARENS)) {
+                // TODO error
+                ast_if_node_free(if_node);
+                return NULL;
+            }
+            state->mode = PARSER_MODE_PFX(IF_COND);
         }
+        // TODO error
         // parse body
         while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
             // before body remove newline
         }
+        // TODO error
     }
+    return if_node;
 }
 
 static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder* const head) {
@@ -203,10 +222,12 @@ static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cu
     ast_node *value_tmp = NULL;
     ast_node *cur_node = NULL;
     ast_fn_node *fn, *parent;
+    ast_if_node *if_node;
     // init the fn node list
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
         switch (state->next->type) {
             case TOKEN_PFX(NEWLINE):
+                if (cur_node == NULL) continue;
                 return wire_final_value(value_tmp, cur_node);
             case TOKEN_PFX(VAR):
                 // TODO check if fn call
@@ -256,6 +277,9 @@ static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cu
                 ts = token_peek_check(state, TOKEN_PFX(LBRACE));
                 if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
                     // if stmt
+                    if ((if_node = parse_if(state, cur_fn)) == NULL) {
+                        // TODO error
+                    }
                 } else if (ts != TOKEN_STATUS_PFX(SOME)) {
                     // TODO error
                 }

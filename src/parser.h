@@ -51,7 +51,7 @@ typedef struct _ast_if_cond {
 
 typedef struct {
     ast_if_cond *conds_head, *conds_tail;
-    var_type *return_type; // all bodies must have same type
+    var_type *return_type; // all bodies must have same type if if is being assigned
     ast_node_link *else_head, *else_tail;
 } ast_if_node;
 
@@ -120,7 +120,15 @@ inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent) {
     return fn;
 }
 
-void ast_fn_node_free(ast_fn_node *fn);
+void ast_fn_node_free(ast_fn_node *fn, bool free_parent);
+
+inline ast_if_node *ast_if_node_init(void) {
+    ast_if_node *if_node = calloc(1, sizeof(ast_if_node));
+    if_node->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
+    return if_node;
+}
+
+void ast_if_node_free(ast_if_node *if_node);
 
 #define PARSER_STATUS_PFX(NAME) PARSER_STATUS_##NAME
 
@@ -167,7 +175,7 @@ inline void parser_state_free(parser_state *state) {
     token_free(state->next);
     token_free(state->peek);
     if (state->s) string_free(state->s);
-    ast_fn_node_free(state->root_fn);
+    ast_fn_node_free(state->root_fn, true);
     error_free(state->e);
     free(state);
 }
