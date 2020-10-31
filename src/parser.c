@@ -111,8 +111,9 @@ static var_type *parse_var_type(parser_state* const state) {
     return NULL;
 }
 
-static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_fn) {
+static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const parent_fn) {
     // we are at the first maybe var after first (
+    ast_fn_node *cur_fn = ast_fn_node_init(parent_fn);
     token_status ts;
     // parse args
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
@@ -179,7 +180,7 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const cur_f
     return cur_fn;
 }
 
-static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_fn, ast_if_node *const if_node) {
+static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_fn) {
     // we are at the fist cond newline or (
     token_status ts;
     bool in_else = false;
@@ -231,7 +232,7 @@ static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cu
             case TOKEN_PFX(LBRACE):
                 ts = token_peek_check(state, TOKEN_PFX(LPARENS));
                 if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
-                    if ((fn = parse_fn(state, ast_fn_node_init(cur_fn))) == NULL) {
+                    if ((fn = parse_fn(state, cur_fn)) == NULL) {
                         // TODO error
                     }
                     n = ast_node_init(AST_PFX(FN), state->next, (ast_data) { .fn = fn });
