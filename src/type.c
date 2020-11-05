@@ -24,6 +24,7 @@ static size_t hash_symbol(const token *const t, const string *const s) {
 static symbol_table_bucket *compare_bucket(symbol_table_bucket* b, const token *const t, const string *const s) {
     size_t i = 0;
     size_t len = token_len(t);
+    if (len != b->size_len - 1) return NULL; // if they are not the same length no match
     for (; i <= len; i++) if (s->buffer[i + t->start_idx] != b->symbol[i]) break;
     if (i == len) return b;
     return NULL;

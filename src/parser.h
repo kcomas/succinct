@@ -91,7 +91,7 @@ inline void ast_node_link_free(ast_node_link *head) {
         ast_node_free(head->node);
         ast_node_link *tmp = head;
         head = head->next;
-        ast_node_link_free(tmp);
+        free(tmp);
     }
 }
 

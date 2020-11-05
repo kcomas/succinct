@@ -10,6 +10,7 @@
 #define TOKEN_PFX(NAME) TOKEN_##NAME
 
 typedef enum {
+    TOKEN_PFX(_START_TOKENS),
     TOKEN_PFX(UNKNOWN),
     // Values
     TOKEN_PFX(VAR),
@@ -40,7 +41,7 @@ typedef enum {
     TOKEN_PFX(LESS), // <
     TOKEN_PFX(LESSEQUAL), // <=
     TOKEN_PFX(AND), // &
-    TOKEN_PFX(_MAX_TOKENS)
+    TOKEN_PFX(_END_TOKENS)
 } token_type;
 
 typedef struct {
@@ -54,8 +55,6 @@ inline token *token_init(void) {
     t->type = TOKEN_PFX(UNKNOWN);
     t->char_no = 1;
     t->line_no = 1;
-    t->start_idx = 0;
-    t->end_idx = 0;
     return t;
 }
 
@@ -69,11 +68,7 @@ inline size_t token_len(const token *const t) {
 
 const char *token_type_string(token_type type);
 
-inline void token_print(const token *const t, const string *const s) {
-    printf("Line: %lu, Char %lu, Len: %lu, %s, ", t->line_no, t->char_no, token_len(t), token_type_string(t->type));
-    for(size_t i = t->start_idx; i <= t->end_idx; i++) putchar(s->buffer[i]);
-    putchar('\n');
-}
+void token_print_json(const token *const t, const string *const s);
 
 inline token *token_copy(token *const dest, const token *const src) {
     return memcpy(dest, src, sizeof(token));
