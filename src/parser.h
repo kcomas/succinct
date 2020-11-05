@@ -86,8 +86,13 @@ inline ast_node_link *ast_node_link_init(void) {
     return calloc(1, sizeof(ast_node_link));
 }
 
-inline void ast_node_link_free(ast_node_link *link) {
-    free(link);
+inline void ast_node_link_free(ast_node_link *head) {
+    while (head != NULL) {
+        ast_node_free(head->node);
+        ast_node_link *tmp = head;
+        head = head->next;
+        ast_node_link_free(tmp);
+    }
 }
 
 inline ast_node_holder *ast_node_holder_init(void) {
@@ -120,7 +125,14 @@ inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent) {
     return fn;
 }
 
-void ast_fn_node_free(ast_fn_node *fn, bool free_parent);
+inline void ast_fn_node_free(ast_fn_node *fn, bool free_parent) {
+    var_type_free(fn->type);
+    // free links
+    ast_node_link_free(fn->list_head);
+    if (free_parent && fn->parent) ast_fn_node_free(fn->parent, free_parent);
+    free(fn);
+
+}
 
 inline ast_if_node *ast_if_node_init(void) {
     ast_if_node *if_node = calloc(1, sizeof(ast_if_node));
@@ -129,6 +141,13 @@ inline ast_if_node *ast_if_node_init(void) {
 }
 
 void ast_if_node_free(ast_if_node *if_node);
+
+inline ast_if_cond *ast_if_cond_init(void) {
+    ast_if_cond *cond = calloc(1, sizeof(ast_if_cond));
+    cond->body_head = ast_node_link_init();
+    cond->body_tail = cond->body_head;
+    return cond;
+}
 
 #define PARSER_STATUS_PFX(NAME) PARSER_STATUS_##NAME
 

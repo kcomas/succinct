@@ -29,7 +29,7 @@ void ast_node_free(ast_node *node) {
 
 extern inline ast_node_link *ast_node_link_init(void);
 
-extern inline void ast_node_link_free(ast_node_link *link);
+extern inline void ast_node_link_free(ast_node_link *head);
 
 extern inline ast_op_node *ast_op_node_init(void);
 
@@ -37,19 +37,7 @@ extern inline void ast_op_node_free(ast_op_node *op);
 
 extern inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent);
 
-void ast_fn_node_free(ast_fn_node *fn, bool free_parent) {
-    var_type_free(fn->type);
-    // free links
-    ast_node_link *head = fn->list_head;
-    while (head != NULL) {
-        ast_node_free(head->node);
-        ast_node_link *tmp = head;
-        head = head->next;
-        ast_node_link_free(tmp);
-    }
-    if (free_parent && fn->parent) ast_fn_node_free(fn->parent, free_parent);
-    free(fn);
-}
+extern inline void ast_fn_node_free(ast_fn_node *fn, bool free_parent);
 
 extern inline ast_if_node *ast_if_node_init(void);
 
@@ -192,12 +180,18 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
     ast_if_node *if_node = ast_if_node_init();
     token_status ts;
     bool in_else = false;
-    ast_if_cond *cond_node;
-    for (;;) {
+    bool parse = true;
+    ast_if_cond *cond_node = NULL;
+    while (parse == true) {
         // parse cond
         while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
             // before cond remove newline
-            while (state->next->type == TOKEN_PFX(NEWLINE)) continue;
+            if (state->next->type == TOKEN_PFX(NEWLINE)) continue;
+            if (state->next->type == TOKEN_PFX(LBRACE)) {
+                // reached else stmt
+                in_else = true;
+                break;
+            }
             if (state->next->type != TOKEN_PFX(LPARENS)) {
                 // TODO error
                 ast_if_node_free(if_node);
@@ -209,13 +203,14 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
         // parse body
         while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
             // before body remove newline
+            if (state->next->type == TOKEN_PFX(NEWLINE)) continue;
         }
         // TODO error
     }
     return if_node;
 }
 
-static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder* const head) {
+static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const head) {
     token_status ts;
     symbol_table_bucket *b;
     ast_node *n;
@@ -260,6 +255,8 @@ static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cu
                 } else if (ts != TOKEN_STATUS_PFX(SOME)) {
                     // TODO error
                 }
+                break;
+            case TOKEN_PFX(RPARENS):
                 break;
             case TOKEN_PFX(ASSIGN):
                 // TODO fn check
