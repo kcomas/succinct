@@ -40,6 +40,8 @@ int main(int argc, char *argv[]) {
                 return print_tokens(argv[2]);
             case 'a':
                 return print_ast(argv[2]);
+            default:
+                break;
         }
     }
     // TODO run

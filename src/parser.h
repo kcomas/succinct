@@ -82,6 +82,10 @@ inline ast_node *ast_node_init(ast_type type, const token *const t, ast_data dat
 
 void ast_node_free(ast_node *node);
 
+const char *ast_type_string(ast_type type);
+
+void ast_node_print_json(const ast_node *const node);
+
 inline ast_node_link *ast_node_link_init(void) {
     return calloc(1, sizeof(ast_node_link));
 }

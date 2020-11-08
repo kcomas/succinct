@@ -27,6 +27,28 @@ void ast_node_free(ast_node *node) {
     free(node);
 }
 
+const char *ast_type_string(ast_type type) {
+    static const char *types[] = {
+        "_VALUE",
+        "UNKNOWN",
+        "VAR",
+        "INT",
+        "CHAR",
+        "FN",
+        "_END_VALUE",
+        "_OP",
+        "ASSIGN",
+        "ADD",
+        "WRITE",
+        "_END_OP"
+    };
+    return type > AST_PFX(_VALUE) && type < AST_PFX(_END_OP) ? types[type] : "AST_TYPE_NOT_FOUND";
+}
+
+void ast_node_print_json(const ast_node *const node) {
+    printf("{\"type\":\"%s\",\"data\":{", ast_type_string(node->type));
+}
+
 extern inline ast_node_link *ast_node_link_init(void);
 
 extern inline void ast_node_link_free(ast_node_link *head);

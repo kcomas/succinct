@@ -1,3 +1,5 @@
 #!/bin/bash
 
-echo `echo -n '[' && ./sc -t $1 | sed 's/,$//' && echo -n ']'` | python -m json.tool
+set -e
+
+echo `echo -n '[' && ./sc $1 $2 | sed 's/,$//' && echo -n ']'` | python -m json.tool

@@ -8,7 +8,7 @@ extern inline void token_free(token *t);
 extern inline size_t token_len(const token *const t);
 
 const char *token_type_string(token_type type) {
-    static const char* types[] = {
+    static const char *types[] = {
         "_START_TOKENS",
         "UNKNOWN",
         "VAR",
@@ -37,7 +37,7 @@ const char *token_type_string(token_type type) {
         "AND",
         "_MAX_TOKENS"
     };
-    return type > TOKEN_PFX(_START_TOKENS) && type < TOKEN_PFX(_END_TOKENS) ? types[type] : "TOKEN_NOT_FOUND";
+    return type > TOKEN_PFX(_START_TOKENS) && type < TOKEN_PFX(_END_TOKENS) ? types[type] : "TOKEN_TYPE_NOT_FOUND";
 };
 
 void token_print_json(const token *const t, const string *const s) {
@@ -47,7 +47,7 @@ void token_print_json(const token *const t, const string *const s) {
     } else {
         for(size_t i = t->start_idx; i <= t->end_idx; i++) {
             if (s->buffer[i] == '"') putchar('\\');
-             putchar(s->buffer[i]);
+            putchar(s->buffer[i]);
         }
     }
     printf("\"}");
