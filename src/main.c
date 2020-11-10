@@ -10,11 +10,18 @@ int print_tokens(const char *const file) {
     if (clo == -1) errno_print_exit();
     // printf("%s\n", str->buffer);
     token *t = token_init();
+    token *print = token_init();
     token_status ts;
+    putchar('[');
     while ((ts = token_next(t, str)) == TOKEN_STATUS_PFX(SOME)) {
-        token_print_json(t, str);
-        putchar(',');
+        if (print->type != TOKEN_PFX(UNKNOWN)) {
+            token_print_json(print, str);
+            putchar(',');
+        }
+        token_copy(print, t);
     }
+    token_print_json(print, str);
+    putchar(']');
     string_free(str);
     token_free(t);
     return 0;

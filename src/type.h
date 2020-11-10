@@ -9,6 +9,7 @@
 #define VAR_PFX(NAME) VAR_##NAME
 
 typedef enum {
+    VAR_PFX(_VAR_TYPE_HEADER),
     VAR_PFX(UNKNOWN),
     VAR_PFX(VOID),
     VAR_PFX(U8),
@@ -29,8 +30,11 @@ typedef enum {
     VAR_PFX(FN),
     VAR_PFX(THREAD),
     VAR_PFX(FD),
-    VAR_PFX(REGEX)
+    VAR_PFX(REGEX),
+    VAR_PFX(_END_VAR_TYPE_HEADER)
 } var_type_header;
+
+const char *var_type_header_string(var_type_header header);
 
 typedef struct _var_type var_type;
 
@@ -111,3 +115,5 @@ inline var_type *var_type_fn_init(size_t symbol_table_size) {
     fn->symbols = symbol_table_init(symbol_table_size);
     return var_type_init(VAR_PFX(FN), (var_type_body) { .fn = fn });
 }
+
+void var_type_print_json(const var_type *const t);

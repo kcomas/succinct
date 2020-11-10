@@ -1,6 +1,35 @@
 
 #include "type.h"
 
+const char *var_type_header_string(var_type_header header) {
+    static const char *types[] = {
+        "_VAR_TYPE_HEADER",
+        "UNKNOWN",
+        "VOID",
+        "U8",
+        "U16",
+        "U32",
+        "U64",
+        "I8",
+        "I16",
+        "I32",
+        "I64",
+        "F32",
+        "F64",
+        "CHAR",
+        "STRING",
+        "DATETIME",
+        "VEC",
+        "HASH",
+        "FN",
+        "THREAD",
+        "FD",
+        "REGEX",
+        "_END_VAR_TYPE_HEADER"
+    };
+    return header > VAR_PFX(_VAR_TYPE_HEADER) && header < VAR_PFX(_END_VAR_TYPE_HEADER) ? types[header] : "VAR_TYPE_HEADER_NOT_FOUND";
+}
+
 extern inline symbol_table *symbol_table_init(size_t size);
 
 void symbol_table_free(symbol_table *s) {
@@ -88,4 +117,8 @@ void var_type_free(var_type *t) {
             break;
     }
     free(t);
+}
+
+void var_type_print_json(const var_type *const t) {
+    printf("{\"header\":\"%s\",\"body\":", var_type_header_string(t->header));
 }

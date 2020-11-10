@@ -249,18 +249,22 @@ static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cu
             case TOKEN_PFX(VAR):
                 // TODO check if fn call
                 // found var create bucket and node
-                // check parent fns for scope
-                parent = cur_fn->parent;
-                while (parent != NULL) {
-                    b = symbol_table_find(parent->type->body.fn->symbols, state->next, state->s);
-                    if (b != NULL) break;
-                    parent = parent->parent;
-                }
-                // not in parent add to cur
-                if (parent == NULL) {
-                    b = symbol_table_findsert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(LOCAL), state->next, state->s);
-                    // inc local count
-                    cur_fn->type->body.fn->num_locals++;
+                // check if exists in current scope
+                b = symbol_table_find(cur_fn->type->body.fn->symbols, state->next, state->s);
+                if (b == NULL) {
+                    // check parent fns for scope
+                    parent = cur_fn->parent;
+                    while (parent != NULL) {
+                        b = symbol_table_find(parent->type->body.fn->symbols, state->next, state->s);
+                        if (b != NULL) break;
+                        parent = parent->parent;
+                    }
+                    // not in parent add to cur
+                    if (parent == NULL) {
+                        b = symbol_table_findsert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(LOCAL), state->next, state->s);
+                        // inc local count
+                        cur_fn->type->body.fn->num_locals++;
+                    }
                 }
                 n = ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b });
                 break;
