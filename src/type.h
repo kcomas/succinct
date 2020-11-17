@@ -41,10 +41,14 @@ typedef struct _var_type var_type;
 #define SYMBOL_PFX(NAME) SYMBOL_##NAME
 
 typedef enum {
+    SYMBOL_PFX(_SYMBOL_TYPE),
     SYMBOL_PFX(LOCAL),
     SYMBOL_PFX(ARG),
-    SYMBOL_PFX(KEY)
+    SYMBOL_PFX(KEY),
+    SYMBOL_PFX(_END_SYMBOL_TYPE)
 } symbol_table_type;
+
+const char *symbol_table_type_string(symbol_table_type type);
 
 typedef struct _symbol_table_bucket {
     symbol_table_type table_type;
@@ -58,7 +62,7 @@ typedef struct _symbol_table_bucket {
 } symbol_table_bucket;
 
 typedef struct {
-    size_t symbol_counter, size, used;
+    size_t size, symbol_counter; // counter is used
     symbol_table_bucket *buckets[]; // list on collision
 } symbol_table;
 
