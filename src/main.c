@@ -24,6 +24,7 @@ int print_tokens(const char *const file) {
     putchar(']');
     string_free(str);
     token_free(t);
+    token_free(print);
     return 0;
 }
 

@@ -58,6 +58,7 @@ void symbol_table_free(symbol_table *s) {
         while (b != NULL) {
             symbol_table_bucket *tmp = b;
             b = b->next;
+            var_type_free(tmp->type);
             free(tmp);
         }
     }

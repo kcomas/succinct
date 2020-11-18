@@ -24,6 +24,7 @@ void ast_node_free(ast_node *node) {
                 break;
         }
     }
+    token_free(node->t);
     free(node);
 }
 
