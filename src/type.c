@@ -45,7 +45,7 @@ void symbol_table_bucket_print_json(const symbol_table_bucket *const b) {
     printf("{\"symbol_table_type\":\"%s\",\"symbol_idx\":%lu,\"size_len\":%lu,", symbol_table_type_string(b->table_type), b->symbol_idx, b->size_len);
     if (b->table_type == SYMBOL_PFX(KEY)) printf("\"key_idx\":%lu,", b->idx.key);
     else printf("\"stack_idx\":%lu", b->idx.stack);
-    printf("\"var_type\":");
+    printf(",\"var_type\":");
     var_type_print_json(b->type);
     printf(",\"symbol\":\"%s\"}", b->symbol);
 }
@@ -85,9 +85,8 @@ static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t sym
     b->table_type = table_type;
     b->symbol_idx = symbol_counter;
     b->size_len = size_len;
-    b->idx.stack = SIZE_MAX;
     b->type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
-    memcpy(b->symbol, s + t->start_idx, token_len(t));
+    memcpy(b->symbol, s->buffer + t->start_idx, token_len(t));
     return b;
 }
 
@@ -115,7 +114,7 @@ symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_ty
         return b;
     }
     symbol_table_bucket *b = (*table)->buckets[hash_idx];
-    while (b->next != NULL) {
+    while (b != NULL) {
         symbol_table_bucket *tmp = compare_buckets(b, t, s);
         if (tmp != NULL) return tmp;
         b = b->next;
@@ -128,7 +127,7 @@ symbol_table_bucket *symbol_table_find(symbol_table *table, const token *const t
     size_t hash_idx = hash_symbol(t, s) % table->size;
     if (table->buckets[hash_idx] == NULL) return NULL;
     symbol_table_bucket *b = table->buckets[hash_idx];
-    while (b->next != NULL) {
+    while (b != NULL) {
         symbol_table_bucket *tmp = compare_buckets(b, t, s);
         if (tmp != NULL) return tmp;
         b = b->next;

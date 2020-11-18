@@ -281,7 +281,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
 
 static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const head) {
     token_status ts;
-    symbol_table_bucket *b;
+    symbol_table_bucket *b = NULL;
     ast_node *n;
     ast_node *value_tmp = NULL;
     ast_node *cur_node = NULL;
@@ -297,23 +297,20 @@ static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cu
                 // TODO check if fn call
                 // found var create bucket and node
                 // check if exists in current scope
-                b = symbol_table_find(cur_fn->type->body.fn->symbols, state->next, state->s);
+                parent = cur_fn;
+                while (parent != NULL) {
+                    b = symbol_table_find(parent->type->body.fn->symbols, state->next, state->s);
+                    if (b != NULL) break;
+                    parent = parent->parent;
+                }
+                // not in parent add to cur
                 if (b == NULL) {
-                    // check parent fns for scope
-                    parent = cur_fn->parent;
-                    while (parent != NULL) {
-                        b = symbol_table_find(parent->type->body.fn->symbols, state->next, state->s);
-                        if (b != NULL) break;
-                        parent = parent->parent;
-                    }
-                    // not in parent add to cur
-                    if (parent == NULL) {
-                        b = symbol_table_findsert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(LOCAL), state->next, state->s);
-                        // inc local count
-                        cur_fn->type->body.fn->num_locals++;
-                    }
+                    b = symbol_table_findsert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(LOCAL), state->next, state->s);
+                    // inc local count
+                    cur_fn->type->body.fn->num_locals++;
                 }
                 n = ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b });
+                b = NULL;
                 break;
             case TOKEN_PFX(INT):
                 n = ast_node_init(AST_PFX(INT), state->next, (ast_data) {});

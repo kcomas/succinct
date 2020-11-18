@@ -54,7 +54,7 @@ typedef struct _symbol_table_bucket {
     symbol_table_type table_type;
     size_t symbol_idx, size_len; // 1 + length for null term
     union {
-        size_t stack, key; // max for unused, absolute index of the stack, if hash with fixed keys get index of key
+        size_t stack, key; // absolute index of the stack, if hash with fixed keys get index of key
     } idx;
     struct _symbol_table_bucket *next;
     var_type *type;
