@@ -41,6 +41,15 @@ const char *symbol_table_type_string(symbol_table_type type) {
     return type > SYMBOL_PFX(_SYMBOL_TYPE) && type < SYMBOL_PFX(_END_SYMBOL_TYPE) ? types[type] : "SYMBOL_TABLE_TYPE_NOT_FOUND";
 }
 
+void symbol_table_bucket_print_json(const symbol_table_bucket *const b) {
+    printf("{\"symbol_table_type\":\"%s\",\"symbol_idx\":%lu,\"size_len\":%lu,", symbol_table_type_string(b->table_type), b->symbol_idx, b->size_len);
+    if (b->table_type == SYMBOL_PFX(KEY)) printf("\"key_idx\":%lu,", b->idx.key);
+    else printf("\"stack_idx\":%lu", b->idx.stack);
+    printf("\"var_type\":");
+    var_type_print_json(b->type);
+    printf(",\"symbol\":\"%s\"}", b->symbol);
+}
+
 extern inline symbol_table *symbol_table_init(size_t size);
 
 void symbol_table_free(symbol_table *s) {
@@ -87,12 +96,7 @@ static void symbol_table_print_json(const symbol_table *const table) {
     for (size_t i = 0; i < table->size; i++) {
         symbol_table_bucket *b = table->buckets[i];
         while (b != NULL) {
-            printf("{\"symbol_table_type\":\"%s\",\"symbol_idx\":%lu,\"size_len\":%lu,", symbol_table_type_string(b->table_type), b->symbol_idx, b->size_len);
-            if (b->table_type == SYMBOL_PFX(KEY)) printf("\"key_idx\":%lu,", b->idx.key);
-            else printf("\"stack_idx\":%lu", b->idx.stack);
-            printf("\"var_type\":");
-            var_type_print_json(b->type);
-            printf(",\"symbol\":\"%s\"}", b->symbol);
+            symbol_table_bucket_print_json(b);
             // only print comma if next is not null
             if (b->next != NULL) putchar(',');
             b = b->next;
@@ -155,7 +159,7 @@ void var_type_print_json(const var_type *const t) {
         case VAR_PFX(FN):
             printf("\"num_args\":%lu,\"num_locals\":%lu,\"return_type\":", t->body.fn->num_args, t->body.fn->num_locals);
             var_type_print_json(t->body.fn->return_type);
-            printf("\"symbol_table\":");
+            printf(",\"symbol_table\":");
             symbol_table_print_json(t->body.fn->symbols);
             break;
         default:

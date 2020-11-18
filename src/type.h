@@ -61,6 +61,8 @@ typedef struct _symbol_table_bucket {
     char symbol[];
 } symbol_table_bucket;
 
+void symbol_table_bucket_print_json(const symbol_table_bucket *const b);
+
 typedef struct {
     size_t size, symbol_counter; // counter is used
     symbol_table_bucket *buckets[]; // list on collision

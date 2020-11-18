@@ -30,6 +30,7 @@ int print_tokens(const char *const file) {
 int print_ast(const char *const file) {
     parser_state *state = parser_state_init();
     parser_status status = parse_module(state, file);
+    ast_fn_node_print_json(state->root_fn, state->s);
     parser_state_free(state);
     return status;
 }

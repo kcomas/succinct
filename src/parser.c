@@ -45,12 +45,49 @@ const char *ast_type_string(ast_type type) {
     return type > AST_PFX(_VALUE) && type < AST_PFX(_END_OP) ? types[type] : "AST_TYPE_NOT_FOUND";
 }
 
+static void ast_node_link_print_json(ast_node_link *head, const string *const s) {
+    // print all links
+    putchar('[');
+    while (head != NULL) {
+        // TODO tail link has unused link
+        if (head->node != NULL) ast_node_print_json(head->node, s);
+        if (head->next != NULL && head->next->node) putchar(',');
+        head = head->next;
+    }
+    putchar(']');
+}
+
+void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s) {
+    printf("{\"type\":");
+    var_type_print_json(fn->type);
+    printf(",\"parent\":");
+    if (fn->parent != NULL) ast_fn_node_print_json(fn->parent, s);
+    else printf("{}");
+    printf(",\"body\":");
+    ast_node_link_print_json(fn->body_head, s);
+    putchar('}');
+}
+
 void ast_node_print_json(const ast_node *const node, const string *const s) {
     printf("{\"type\":\"%s\",\"data\":", ast_type_string(node->type));
     switch (node->type) {
         case AST_PFX(VAR):
-
+            symbol_table_bucket_print_json(node->data.var);
+            break;
+        case AST_PFX(INT):
+            printf("{}");
+            break;
+        case AST_PFX(FN):
+            ast_fn_node_print_json(node->data.fn, s);
+            break;
         default:
+            // op node
+            printf("{\"left\":");
+            ast_node_print_json(node->data.op->left, s);
+            putchar(',');
+            printf("\"right\":");
+            ast_node_print_json(node->data.op->right, s);
+            putchar('}');
             break;
     }
     putchar(',');
@@ -198,7 +235,7 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
         return NULL;
     }
     // parse body
-    parser_status status = parse_stmts(state, cur_fn, cur_fn->list_tail);
+    parser_status status = parse_stmts(state, cur_fn, cur_fn->body_tail);
     if (status != PARSER_STATUS_PFX(SOME)) {
         // TODO error
         ast_fn_node_free(cur_fn, false);
@@ -370,5 +407,5 @@ parser_status parse_module(parser_state *const state, const char *const filename
         string_free(state->s);
         return PARSER_STATUS_PFX(CANNOT_CLOSE_FILE);
     }
-    return parse_stmts(state, state->root_fn, state->root_fn->list_tail);
+    return parse_stmts(state, state->root_fn, state->root_fn->body_tail);
 }

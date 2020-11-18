@@ -40,7 +40,7 @@ typedef struct {
 typedef struct _ast_fn_node {
     var_type *type;
     struct _ast_fn_node *parent; // if null we are at the module level
-    ast_node_link *list_head, *list_tail;
+    ast_node_link *body_head, *body_tail; // TODO unused link at end
 } ast_fn_node;
 
 typedef struct _ast_if_cond {
@@ -124,19 +124,21 @@ inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent) {
     ast_fn_node *fn = calloc(1, sizeof(ast_fn_node));
     fn->type = var_type_fn_init(DEFAULT_SYMBOL_TABLE_SIZE);
     fn->parent = parent;
-    fn->list_head = ast_node_link_init();
-    fn->list_tail = fn->list_head;
+    fn->body_head = ast_node_link_init();
+    fn->body_tail = fn->body_head;
     return fn;
 }
 
 inline void ast_fn_node_free(ast_fn_node *fn, bool free_parent) {
     var_type_free(fn->type);
     // free links
-    ast_node_link_free(fn->list_head);
+    ast_node_link_free(fn->body_head);
     if (free_parent && fn->parent) ast_fn_node_free(fn->parent, free_parent);
     free(fn);
 
 }
+
+void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s);
 
 inline ast_if_node *ast_if_node_init(void) {
     ast_if_node *if_node = calloc(1, sizeof(ast_if_node));
