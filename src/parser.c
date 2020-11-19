@@ -83,10 +83,11 @@ void ast_node_print_json(const ast_node *const node, const string *const s) {
             break;
         default:
             // op node
-            printf("{\"left\":");
+            printf("{\"return_type\":");
+            var_type_print_json(node->data.op->return_type);
+            printf(",\"left\":");
             ast_node_print_json(node->data.op->left, s);
-            putchar(',');
-            printf("\"right\":");
+            printf(",\"right\":");
             ast_node_print_json(node->data.op->right, s);
             putchar('}');
             break;
@@ -252,6 +253,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
     bool in_else = false;
     bool parse = true;
     ast_if_cond *cond_node = NULL;
+    ast_node_holder *cond_holder = ast_node_holder_init();
     while (parse == true) {
         // parse cond
         while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
