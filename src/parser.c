@@ -41,6 +41,7 @@ const char *ast_type_string(ast_type type) {
         "ASSIGN",
         "ADD",
         "WRITE",
+        "LESSEQUAL",
         "_END_OP"
     };
     return type > AST_PFX(_VALUE) && type < AST_PFX(_END_OP) ? types[type] : "AST_TYPE_NOT_FOUND";
@@ -250,10 +251,11 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
     // we are at the fist cond newline or (
     ast_if_node *if_node = ast_if_node_init();
     token_status ts;
+    parser_status ps;
     bool in_else = false;
     bool parse = true;
     ast_if_cond *cond_node = NULL;
-    ast_node_holder *cond_holder = ast_node_holder_init();
+    ast_node_holder *cond_holder;
     while (parse == true) {
         // parse cond
         while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
@@ -270,19 +272,34 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
                 return NULL;
             }
             state->mode = PARSER_MODE_PFX(IF_COND);
+            cond_holder = ast_node_holder_init();
+            if ((ps = parse_stmt(state, cur_fn, cond_holder)) != PARSER_STATUS_PFX(SOME)) {
+                // TODO error
+                return NULL;
+            }
         }
         // TODO error
         // parse body
         while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
             // before body remove newline
-            if (state->next->type == TOKEN_PFX(NEWLINE)) continue;
+            if (in_else == false && state->next->type == TOKEN_PFX(NEWLINE)) continue;
+            if (in_else == true) {
+                if (cond_node->body_tail->node == NULL) {
+                    // TODO error
+                    // cannot have if stmt with no conds
+                    return NULL;
+                }
+            } else {
+
+            }
         }
         // TODO error
+        // attach cond node to if node
     }
     return if_node;
 }
 
-static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const head) {
+parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const head) {
     token_status ts;
     symbol_table_bucket *b = NULL;
     ast_node *n;
@@ -330,6 +347,7 @@ static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cu
                 }
                 break;
             case TOKEN_PFX(RPARENS):
+                if (state->mode == PARSER_MODE_PFX(IF_COND)) return wire_final_value(value_tmp, cur_node);
                 break;
             case TOKEN_PFX(ASSIGN):
                 // TODO fn check
@@ -342,6 +360,10 @@ static parser_status parse_stmt(parser_state *const state, ast_fn_node *const cu
             case TOKEN_PFX(WRITE):
                 // TODO fn check
                 n = make_op(state, AST_PFX(WRITE));
+                break;
+            case TOKEN_PFX(LESSEQUAL):
+                // TODO fn check
+                n = make_op(state, AST_PFX(LESSEQUAL));
                 break;
             case TOKEN_PFX(COND):
                 ts = token_peek_check(state, TOKEN_PFX(LBRACE));

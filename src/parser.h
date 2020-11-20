@@ -22,6 +22,7 @@ typedef enum {
     AST_PFX(ASSIGN),
     AST_PFX(ADD),
     AST_PFX(WRITE),
+    AST_PFX(LESSEQUAL),
     AST_PFX(_END_OP)
 } ast_type;
 
@@ -204,6 +205,8 @@ inline void parser_state_free(parser_state *state) {
     error_free(state->e);
     free(state);
 }
+
+parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const head);
 
 parser_status parse_stmts(parser_state *const state, ast_fn_node *const cur_fn, ast_node_link *tail);
 
