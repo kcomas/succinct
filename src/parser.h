@@ -22,6 +22,7 @@ typedef enum {
     AST_PFX(ASSIGN),
     AST_PFX(ADD),
     AST_PFX(WRITE),
+    AST_PFX(EQUAL),
     AST_PFX(LESSEQUAL),
     AST_PFX(_END_OP)
 } ast_type;
@@ -41,7 +42,7 @@ typedef struct {
 typedef struct _ast_fn_node {
     var_type *type;
     struct _ast_fn_node *parent; // if null we are at the module level
-    ast_node_link *body_head, *body_tail; // TODO unused link at end
+    ast_node_link *body_head, *body_tail; // TODO empty link at end
 } ast_fn_node;
 
 typedef struct _ast_if_cond {
