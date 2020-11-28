@@ -52,8 +52,8 @@ typedef struct _ast_if_cond {
 } ast_if_cond;
 
 typedef struct {
-    ast_if_cond *conds_head, *conds_tail;
     var_type *return_type; // all bodies must have same type if if is being assigned
+    ast_if_cond *conds_head, *conds_tail;
     ast_node_link *else_head, *else_tail;
 } ast_if_node;
 
@@ -156,6 +156,8 @@ inline ast_if_cond *ast_if_cond_init(void) {
     cond->body_tail = cond->body_head;
     return cond;
 }
+
+void ast_if_node_print_json(const ast_if_node *const if_node, const string *const s);
 
 #define PARSER_STATUS_PFX(NAME) PARSER_STATUS_##NAME
 

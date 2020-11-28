@@ -59,17 +59,6 @@ static void ast_node_link_print_json(ast_node_link *head, const string *const s)
     putchar(']');
 }
 
-void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s) {
-    printf("{\"type\":");
-    var_type_print_json(fn->type);
-    printf(",\"parent\":");
-    if (fn->parent != NULL) ast_fn_node_print_json(fn->parent, s);
-    else printf("{}");
-    printf(",\"body\":");
-    ast_node_link_print_json(fn->body_head, s);
-    putchar('}');
-}
-
 void ast_node_print_json(const ast_node *const node, const string *const s) {
     printf("{\"type\":\"%s\",\"data\":", ast_type_string(node->type));
     switch (node->type) {
@@ -111,11 +100,41 @@ extern inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent);
 
 extern inline void ast_fn_node_free(ast_fn_node *fn, bool free_parent);
 
+void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s) {
+    printf("{\"type\":");
+    var_type_print_json(fn->type);
+    printf(",\"parent\":");
+    if (fn->parent != NULL) ast_fn_node_print_json(fn->parent, s);
+    else printf("{}");
+    printf(",\"body\":");
+    ast_node_link_print_json(fn->body_head, s);
+    putchar('}');
+}
+
 extern inline ast_if_node *ast_if_node_init(void);
 
 void ast_if_node_free(ast_if_node *if_node) {
     // TODO
     free(if_node);
+}
+
+void ast_if_node_print_json(const ast_if_node *const if_node, const string *const s) {
+    printf("{\"return_type\":");
+    var_type_print_json(if_node->return_type);
+    printf(",\"conds\":[");
+    ast_if_cond *head = if_node->conds_head;
+    while (head != NULL) {
+        printf("{\"cond\":");
+        ast_node_print_json(head->cond, s);
+        printf(",\"body\":");
+        ast_node_link_print_json(head->body_head, s);
+        putchar('}');
+        if (head->next != NULL) putchar(',');
+        head = head->next;
+    }
+    printf("],\"else\":");
+    ast_node_link_print_json(if_node->else_head, s);
+    putchar('}');
 }
 
 extern inline ast_if_cond *ast_if_cond_init(void);
@@ -255,10 +274,9 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
     token_status ts;
     parser_status ps;
     bool in_else = false;
-    bool parse = true;
     ast_if_cond *cond_node;
     ast_node_holder *cond_holder;
-    while (parse == true) {
+    for (;;) {
         // parse cond
         cond_node = NULL;
         while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
@@ -299,6 +317,8 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
                     ast_if_node_free(if_node);
                     return NULL;
                 }
+                ast_if_node_print_json(if_node, state->s);
+                exit(1);
             } else {
                 if (state->next->type != TOKEN_PFX(LBRACE)) {
                     // TODO error
@@ -310,12 +330,19 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
                     ast_if_node_free(if_node);
                     return NULL;
                 }
-                ast_node_print_json(cond_node->body_head->node, state->s);
-                exit(1);
             }
+            break;
         }
         // TODO error
         // attach cond node to if node
+        if (if_node->conds_head == NULL) {
+            if_node->conds_head = cond_node;
+            if_node->conds_tail = if_node->conds_head;
+        } else {
+            if_node->conds_tail->next = cond_node;
+            if_node->conds_tail = if_node->conds_tail->next;
+        }
+        // outside body possible next cond or end of if
     }
     return if_node;
 }
