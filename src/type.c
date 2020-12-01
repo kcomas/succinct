@@ -41,15 +41,6 @@ const char *symbol_table_type_string(symbol_table_type type) {
     return type > SYMBOL_PFX(_SYMBOL_TYPE) && type < SYMBOL_PFX(_END_SYMBOL_TYPE) ? types[type] : "SYMBOL_TABLE_TYPE_NOT_FOUND";
 }
 
-void symbol_table_bucket_print_json(const symbol_table_bucket *const b) {
-    printf("{\"symbol_table_type\":\"%s\",\"symbol_idx\":%lu,\"size_len\":%lu,", symbol_table_type_string(b->table_type), b->symbol_idx, b->size_len);
-    if (b->table_type == SYMBOL_PFX(KEY)) printf("\"key_idx\":%lu,", b->idx.key);
-    else printf("\"stack_idx\":%lu", b->idx.stack);
-    printf(",\"var_type\":");
-    var_type_print_json(b->type);
-    printf(",\"symbol\":\"%s\"}", b->symbol);
-}
-
 extern inline symbol_table *symbol_table_init(size_t size);
 
 void symbol_table_free(symbol_table *s) {
@@ -89,20 +80,6 @@ static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t sym
     b->type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
     memcpy(b->symbol, s->buffer + t->start_idx, token_len(t));
     return b;
-}
-
-static void symbol_table_print_json(const symbol_table *const table) {
-    printf("{\"size\":%lu,\"symbol_counter\":%lu,\"buckets\":[", table->size, table->symbol_counter);
-    for (size_t i = 0; i < table->size; i++) {
-        symbol_table_bucket *b = table->buckets[i];
-        while (b != NULL) {
-            symbol_table_bucket_print_json(b);
-            // only print comma if next is not null
-            if (b->next != NULL) putchar(',');
-            b = b->next;
-        }
-    }
-    printf("]}");
 }
 
 symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_type table_type, const token *const t, const string *const s) {
@@ -151,19 +128,4 @@ void var_type_free(var_type *t) {
             break;
     }
     free(t);
-}
-
-void var_type_print_json(const var_type *const t) {
-    printf("{\"header\":\"%s\",\"body\":{", var_type_header_string(t->header));
-    switch (t->header) {
-        case VAR_PFX(FN):
-            printf("\"num_args\":%lu,\"num_locals\":%lu,\"return_type\":", t->body.fn->num_args, t->body.fn->num_locals);
-            var_type_print_json(t->body.fn->return_type);
-            printf(",\"symbol_table\":");
-            symbol_table_print_json(t->body.fn->symbols);
-            break;
-        default:
-            break;
-    }
-    printf("}}");
 }

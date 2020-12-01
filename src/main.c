@@ -1,5 +1,6 @@
 
 #include "parser.h"
+#include "print_json.h"
 
 int print_tokens(const char *const file) {
     int fd = file_open_r(file);

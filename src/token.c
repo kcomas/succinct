@@ -40,19 +40,6 @@ const char *token_type_string(token_type type) {
     return type > TOKEN_PFX(_START_TOKENS) && type < TOKEN_PFX(_END_TOKENS) ? types[type] : "TOKEN_TYPE_NOT_FOUND";
 };
 
-void token_print_json(const token *const t, const string *const s) {
-    printf("{\"type\":\"%s\",\"line\":%lu,\"char\":%lu,\"len\":%lu,\"str\":\"", token_type_string(t->type), t->line_no, t->char_no, token_len(t));
-    if (t->type == TOKEN_PFX(NEWLINE)) {
-        printf("\\n");
-    } else {
-        for(size_t i = t->start_idx; i <= t->end_idx; i++) {
-            if (s->buffer[i] == '"') putchar('\\');
-            putchar(s->buffer[i]);
-        }
-    }
-    printf("\"}");
-}
-
 extern inline token *token_copy(token *const dest, const token *const src);
 
 static void next_char_update(token *const t) {

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct {
+typedef struct _string {
     size_t size, len; // size is allways 1 greater then len, null terminated
     char buffer[];
 } string;

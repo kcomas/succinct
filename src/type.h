@@ -61,7 +61,6 @@ typedef struct _symbol_table_bucket {
     char symbol[];
 } symbol_table_bucket;
 
-void symbol_table_bucket_print_json(const symbol_table_bucket *const b);
 
 typedef struct {
     size_t size, symbol_counter; // counter is used
@@ -121,5 +120,3 @@ inline var_type *var_type_fn_init(size_t symbol_table_size) {
     fn->symbols = symbol_table_init(symbol_table_size);
     return var_type_init(VAR_PFX(FN), (var_type_body) { .fn = fn });
 }
-
-void var_type_print_json(const var_type *const t);
