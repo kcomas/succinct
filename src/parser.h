@@ -71,7 +71,8 @@ typedef struct {
 typedef union {
     ast_op_node *op;
     ast_fn_node *fn;
-    ast_if_node *cond;
+    ast_if_node *ifn;
+    ast_call_node *call;
     symbol_table_bucket *var;
 } ast_data;
 
@@ -161,6 +162,14 @@ inline ast_call_node *ast_call_node_init(ast_node *const func, size_t num_args, 
     return c;
 }
 
+inline void ast_call_node_free(ast_call_node *c) {
+    ast_node_free(c->func);
+    for (size_t i = 0; i < c->num_args; i++) ast_node_free(c->args[i]);
+    free(c);
+}
+
+void ast_call_node_print_json(const ast_call_node *const c, const string *const s);
+
 inline ast_if_node *ast_if_node_init(void) {
     ast_if_node *if_node = calloc(1, sizeof(ast_if_node));
     if_node->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
@@ -203,7 +212,7 @@ typedef enum {
 } parser_mode;
 
 typedef struct {
-    parser_mode mode;
+    parser_mode mode; // FIXME convert to stack
     token *next, *peek;
     string *s;
     ast_fn_node *root_fn;

@@ -17,8 +17,11 @@ void ast_node_free(ast_node *node) {
         ast_op_node_free(node->data.op);
     } else {
         switch (node->type) {
-            case  AST_PFX(FN):
+            case AST_PFX(FN):
                 ast_fn_node_free(node->data.fn, true);
+                break;
+            case AST_PFX(CALL):
+                ast_call_node_free(node->data.call);
                 break;
             default:
                 break;
@@ -113,6 +116,21 @@ void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s) 
     putchar('}');
 }
 
+extern inline ast_call_node *ast_call_node_init(ast_node *const func, size_t num_args, ast_node *const args[]);
+
+extern inline void ast_call_node_free(ast_call_node *c);
+
+void ast_call_node_print_json(const ast_call_node *const c, const string *const s) {
+    printf("{\"num_args\":%lu,\"func\":", c->num_args);
+    ast_node_print_json(c->func, s);
+    printf(",\"args\":[");
+    for (size_t i = 0; i < c->num_args; i++) {
+        ast_node_print_json(c->args[i], s);
+        if (i < c->num_args - 1) putchar(',');
+    }
+    printf("]}");
+}
+
 extern inline ast_if_node *ast_if_node_init(void);
 
 void ast_if_node_free(ast_if_node *if_node) {
@@ -203,7 +221,6 @@ static var_type *parse_var_type(parser_state* const state) {
 
 static ast_node *parse_check_call(parser_state *const state, ast_fn_node *const cur_fn, ast_node *const func) {
     // checks for fn call returns the assumed func with no error if not found
-    // TODO check func type for operator call
     token_status ts = token_peek_check(state, TOKEN_PFX(LPARENS));
     if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
         ast_node *ast_args[AST_MAX_ARGS];
@@ -225,6 +242,7 @@ static ast_node *parse_check_call(parser_state *const state, ast_fn_node *const 
             holder->node = NULL;
         }
         ast_node_holder_free(holder);
+        return ast_node_init(AST_PFX(CALL), state->next, (ast_data) { .call = ast_call_node_init(func, num_args, ast_args) });
     } else if (ts != TOKEN_STATUS_PFX(SOME)) {
         // TODO error
         return NULL;
@@ -350,9 +368,11 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
             if_node->else_tail = if_node->else_head;
             if ((ps = parse_stmts(state, cur_fn, if_node->else_tail)) != PARSER_STATUS_PFX(DONE)) {
                 // TODO error
+                exit(ps);
                 ast_if_node_free(if_node);
                 return NULL;
             }
+            exit(52);
         } else {
             if (state->next->type != TOKEN_PFX(LBRACE)) {
                 // TODO error
@@ -364,6 +384,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
                 ast_if_node_free(if_node);
                 return NULL;
             }
+
         }
         // TODO error
         // attach cond node to if node
@@ -410,7 +431,8 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                     cur_fn->type->body.fn->num_locals++;
                     n = ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b });
                 } else {
-                    // TODO check if fn call
+                    // check if fn call
+                    n = parse_check_call(state, cur_fn, ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b }));
                 }
                 b = NULL;
                 break;
