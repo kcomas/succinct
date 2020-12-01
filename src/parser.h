@@ -16,11 +16,14 @@ typedef enum {
     AST_PFX(INT),
     AST_PFX(CHAR),
     AST_PFX(FN),
+    AST_PFX(CALL),
+    AST_PFX(IF),
     AST_PFX(_END_VALUE),
     // OP
     AST_PFX(_OP),
     AST_PFX(ASSIGN),
     AST_PFX(ADD),
+    AST_PFX(SUB),
     AST_PFX(WRITE),
     AST_PFX(EQUAL),
     AST_PFX(LESSEQUAL),
@@ -30,7 +33,7 @@ typedef enum {
 typedef struct _ast_node ast_node;
 
 typedef struct _ast_node_link {
-    struct _ast_node_link *next;
+    struct _ast_node_link *next; // TODO possible empty link at end with newlines
     ast_node *node;
 } ast_node_link;
 
@@ -42,8 +45,16 @@ typedef struct {
 typedef struct _ast_fn_node {
     var_type *type;
     struct _ast_fn_node *parent; // if null we are at the module level
-    ast_node_link *body_head, *body_tail; // TODO empty link at end
+    ast_node_link *body_head, *body_tail;
 } ast_fn_node;
+
+#define AST_MAX_ARGS 4
+
+typedef struct {
+    size_t num_args;
+    ast_node *func;
+    ast_node *args[];
+} ast_call_node;
 
 typedef struct _ast_if_cond {
     struct _ast_if_cond *next;
@@ -142,6 +153,14 @@ inline void ast_fn_node_free(ast_fn_node *fn, bool free_parent) {
 
 void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s);
 
+inline ast_call_node *ast_call_node_init(ast_node *const func, size_t num_args, ast_node *const args[]) {
+    ast_call_node *c = calloc(1, sizeof(ast_call_node) + sizeof(ast_node*) * num_args);
+    c->num_args = num_args;
+    c->func = func;
+    for (size_t i = 0; i < num_args; i++) c->args[i] = args[i];
+    return c;
+}
+
 inline ast_if_node *ast_if_node_init(void) {
     ast_if_node *if_node = calloc(1, sizeof(ast_if_node));
     if_node->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
@@ -179,7 +198,8 @@ typedef enum {
 typedef enum {
     PARSER_MODE_PFX(FN),
     PARSER_MODE_PFX(IF_COND),
-    PARSER_MODE_PFX(IF_BODY)
+    PARSER_MODE_PFX(IF_BODY),
+    PARSER_MODE_PFX(FN_ARGS)
 } parser_mode;
 
 typedef struct {
@@ -196,7 +216,7 @@ inline parser_state *parser_state_init(void) {
     state->peek = token_init();
     state->root_fn = ast_fn_node_init(NULL);
     state->e = error_init();
-    // string is added on parse
+    // string is added on parse or before
     return state;
 }
 
