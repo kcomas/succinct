@@ -79,7 +79,9 @@ symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_ty
 
 symbol_table_bucket *symbol_table_find(symbol_table *table, const token *const t, const string *const s);
 
-#define DEFAULT_SYMBOL_TABLE_SIZE 20
+#ifndef DEFAULT_SYMBOL_TABLE_SIZE
+    #define DEFAULT_SYMBOL_TABLE_SIZE 20
+#endif
 
 typedef struct {
     size_t num_args, num_locals;

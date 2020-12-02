@@ -48,7 +48,9 @@ typedef struct _ast_fn_node {
     ast_node_link *body_head, *body_tail;
 } ast_fn_node;
 
-#define AST_MAX_ARGS 4
+#ifndef AST_MAX_ARGS
+    #define AST_MAX_ARGS 4
+#endif
 
 typedef struct {
     size_t num_args;

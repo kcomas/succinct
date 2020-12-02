@@ -206,6 +206,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
             cond_holder->node = NULL;
             if (parser_mode_pop(state) == false) {
                 // TODO error
+                return NULL;
             }
         }
         // TODO error
@@ -228,7 +229,6 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
             if_node->else_tail = if_node->else_head;
             if ((ps = parse_stmts(state, cur_fn, if_node->else_tail)) != PARSER_STATUS_PFX(DONE)) {
                 // TODO error
-                exit(ps);
                 ast_if_node_free(if_node);
                 return NULL;
             }
@@ -264,7 +264,8 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
 }
 
 parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const head) {
-    token_status ts; symbol_table_bucket *b = NULL;
+    token_status ts;
+    symbol_table_bucket *b = NULL;
     ast_node *n;
     ast_node *value_tmp = NULL;
     ast_node *cur_node = NULL;

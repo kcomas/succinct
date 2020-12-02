@@ -31,7 +31,9 @@ typedef enum {
     PARSER_MODE_PFX(FN_ARGS)
 } parser_mode;
 
-#define PARSER_MAX_MODE_STACK_SIZE 20
+#ifndef PARSER_MODE_MAX_STACK_SIZE
+    #define PARSER_MODE_MAX_STACK_SIZE 20
+#endif
 
 typedef struct {
     size_t mode_head;
@@ -43,7 +45,7 @@ typedef struct {
 } parser_state;
 
 inline parser_state *parser_state_init(void) {
-    parser_state *state = calloc(1, sizeof(parser_state) + sizeof(parser_mode) * PARSER_MAX_MODE_STACK_SIZE);
+    parser_state *state = calloc(1, sizeof(parser_state) + sizeof(parser_mode) * PARSER_MODE_MAX_STACK_SIZE);
     // string is added before parse
     state->next = token_init();
     state->peek = token_init();
@@ -62,7 +64,7 @@ inline void parser_state_free(parser_state *state) {
 }
 
 inline bool parser_mode_push(parser_state *const state, parser_mode mode) {
-    if (state->mode_head >= PARSER_MAX_MODE_STACK_SIZE) return false;
+    if (state->mode_head >= PARSER_MODE_MAX_STACK_SIZE) return false;
     state->mode[state->mode_head++] = mode;
     return true;
 }
