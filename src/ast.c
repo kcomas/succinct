@@ -45,6 +45,7 @@ const char *ast_type_string(ast_type type) {
         "_OP",
         "ASSIGN",
         "ADD",
+        "SUB",
         "WRITE",
         "EQUAL",
         "LESSEQUAL",

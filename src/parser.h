@@ -72,11 +72,11 @@ inline bool parser_mode_push(parser_state *const state, parser_mode mode) {
 inline bool parser_mode_pop(parser_state *const state) {
     if (state->mode_head == 0) return false;
     state->mode[state->mode_head--] = PARSER_MODE_PFX(NONE);
-    return false;
+    return true;
 }
 
 inline parser_mode parser_mode_get(parser_state *const state) {
-    return state->mode[state->mode_head];
+    return state->mode_head > 0 ? state->mode[state->mode_head - 1] : PARSER_MODE_PFX(NONE);
 }
 
 parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const head);

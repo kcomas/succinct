@@ -213,7 +213,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
         // parse body
         while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME))
             if (in_else == true || state->next->type != TOKEN_PFX(NEWLINE)) break; // before body remove newline
-        if (parser_mode_push(state, PARSER_MODE_PFX(IF_BODY) == false)) {
+        if (parser_mode_push(state, PARSER_MODE_PFX(IF_BODY)) == false) {
             // TODO error
             return NULL;
         }
@@ -230,6 +230,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
             if ((ps = parse_stmts(state, cur_fn, if_node->else_tail)) != PARSER_STATUS_PFX(DONE)) {
                 // TODO error
                 ast_if_node_free(if_node);
+                exit(ps);
                 return NULL;
             }
             exit(52);
