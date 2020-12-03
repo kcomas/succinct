@@ -82,6 +82,7 @@ static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t sym
     return b;
 }
 
+// TODO separate insert fn for agrs
 symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_type table_type, const token *const t, const string *const s) {
     // TODO resize
     // check if the symbol is in table

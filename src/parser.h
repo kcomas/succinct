@@ -3,6 +3,7 @@
 
 #include "file.h"
 #include "ast.h"
+#include "print_json.h"
 
 #define PARSER_STATUS_PFX(NAME) PARSER_STATUS_##NAME
 
@@ -18,17 +19,19 @@ typedef enum {
     PARSER_STATUS_PFX(MODE_PUSH_FAIL),
     PARSER_STATUS_PFX(MODE_POP_FAIL),
     PARSER_STATUS_PFX(INVALID_TOKEN_SEQUENCE),
-    PARSER_STATUS_PFX(INVALID_FINAL_VALUE)
+    PARSER_STATUS_PFX(INVALID_FINAL_VALUE),
+    PARSER_STATUS_PFX(INVALID_CALL)
 } parser_status;
 
 #define PARSER_MODE_PFX(NAME) PARSER_MODE_##NAME
 
 typedef enum {
     PARSER_MODE_PFX(NONE),
+    PARSER_MODE_PFX(MODULE),
     PARSER_MODE_PFX(FN),
     PARSER_MODE_PFX(IF_COND),
     PARSER_MODE_PFX(IF_BODY),
-    PARSER_MODE_PFX(FN_ARGS)
+    PARSER_MODE_PFX(FN_CALL_ARGS)
 } parser_mode;
 
 #ifndef PARSER_MODE_MAX_STACK_SIZE
@@ -64,7 +67,7 @@ inline void parser_state_free(parser_state *state) {
 }
 
 inline bool parser_mode_push(parser_state *const state, parser_mode mode) {
-    if (state->mode_head >= PARSER_MODE_MAX_STACK_SIZE) return false;
+    if (state->mode_head > PARSER_MODE_MAX_STACK_SIZE) return false;
     state->mode[state->mode_head++] = mode;
     return true;
 }
@@ -75,7 +78,7 @@ inline bool parser_mode_pop(parser_state *const state) {
     return true;
 }
 
-inline parser_mode parser_mode_get(parser_state *const state) {
+inline parser_mode parser_mode_get(const parser_state *const state) {
     return state->mode_head > 0 ? state->mode[state->mode_head - 1] : PARSER_MODE_PFX(NONE);
 }
 

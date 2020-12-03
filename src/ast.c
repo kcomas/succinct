@@ -73,7 +73,16 @@ extern inline void ast_call_node_free(ast_call_node *c);
 extern inline ast_if_node *ast_if_node_init(void);
 
 void ast_if_node_free(ast_if_node *if_node) {
-    // TODO
+    var_type_free(if_node->return_type);
+    ast_if_cond *head = if_node->conds_head;
+    while (head != NULL) {
+        ast_node_free(head->cond);
+        ast_node_link_free(head->body_head);
+        ast_if_cond *tmp = head;
+        head = head->next;
+        free(tmp);
+    }
+    ast_node_link_free(if_node->else_head);
     free(if_node);
 }
 

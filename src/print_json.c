@@ -53,17 +53,6 @@ void token_print_json(const token *const t, const string *const s) {
     printf("\"}");
 }
 
-static void ast_node_link_print_json(ast_node_link *head, const string *const s) {
-    // print all links
-    putchar('[');
-    while (head != NULL) {
-        if (head->node) ast_node_print_json(head->node, s);
-        if (head->next != NULL && head->next->node) putchar(',');
-        head = head->next;
-    }
-    putchar(']');
-}
-
 void ast_node_print_json(const ast_node *const node, const string *const s) {
     printf("{\"type\":\"%s\",\"data\":", ast_type_string(node->type));
     switch (node->type) {
@@ -75,6 +64,9 @@ void ast_node_print_json(const ast_node *const node, const string *const s) {
             break;
         case AST_PFX(FN):
             ast_fn_node_print_json(node->data.fn, s);
+            break;
+        case AST_PFX(CALL):
+            ast_call_node_print_json(node->data.call, s);
             break;
         default:
             // op node
@@ -91,6 +83,17 @@ void ast_node_print_json(const ast_node *const node, const string *const s) {
     printf("\"token\":");
     token_print_json(node->t, s);
     putchar('}');
+}
+
+void ast_node_link_print_json(ast_node_link *head, const string *const s) {
+    // print all links
+    putchar('[');
+    while (head != NULL) {
+        if (head->node) ast_node_print_json(head->node, s);
+        if (head->next != NULL && head->next->node) putchar(',');
+        head = head->next;
+    }
+    putchar(']');
 }
 
 void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s) {
