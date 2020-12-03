@@ -242,8 +242,18 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
                 ast_if_node_free(if_node);
                 return NULL;
             }
-            ast_if_node_print_json(if_node, state->s);
-            exit(20);
+            // done exit if or error
+            while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME))
+                if (state->next->type != TOKEN_PFX(NEWLINE)) break; // before end remove newline
+            if (ts != TOKEN_STATUS_PFX(SOME)) {
+                // TODO error
+                return NULL;
+            } else if (state->next->type == TOKEN_PFX(RBRACE)) {
+                break;
+            } else {
+                // TODO error
+                return NULL;
+            }
         } else {
             if (state->next->type != TOKEN_PFX(LBRACE)) {
                 // TODO error
@@ -368,6 +378,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                     if ((if_node = parse_if(state, cur_fn)) == NULL) {
                         // TODO error
                     }
+                    // TODO wire if
                 } else if (ts != TOKEN_STATUS_PFX(SOME)) {
                     // TODO error
                 }
