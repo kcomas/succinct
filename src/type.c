@@ -63,11 +63,11 @@ static size_t hash_symbol(const token *const t, const string *const s) {
 }
 
 static bool compare_buckets(const symbol_table_bucket *const b, const token *const t, const string *const s) {
-    size_t i = 0;
     size_t len = token_len(t);
-    if (len != b->size_len - 1) return NULL; // if they are not the same length no match
+    if (len != b->size_len - 1) return false; // if they are not the same length no match
+    size_t i = 0;
     for (; i <= len; i++) if (s->buffer[i + t->start_idx] != b->symbol[i]) break;
-    if (i == len) true;
+    if (i == len) return true;
     return false;
 }
 
@@ -84,8 +84,8 @@ static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t sym
 
 symbol_table_bucket *symbol_table_find(symbol_table *table, const token *const t, const string *const s) {
     size_t hash_idx = hash_symbol(t, s) % table->size;
-    if (table->buckets[hash_idx] == NULL) return NULL;
     symbol_table_bucket *b = table->buckets[hash_idx];
+    if (b == NULL) return NULL;
     while (b != NULL) {
         if (compare_buckets(b, t, s) == true) return b;
         b = b->next;
@@ -103,11 +103,12 @@ symbol_table_bucket *_symbol_table_findsert(symbol_table **table, symbol_table_t
         return b;
     }
     symbol_table_bucket *b = (*table)->buckets[hash_idx];
-    while (b != NULL) {
+    for (;;) {
         if (compare_buckets(b, t, s) == true) {
             if (insert_only == true) return NULL; // found but should not exist
             else return b;
         }
+        if (b->next == NULL) break;
         b = b->next;
     }
     b->next = bucket_init(table_type, (*table)->symbol_counter++, t, s);

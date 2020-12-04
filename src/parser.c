@@ -152,6 +152,11 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
         b->type = arg_type;
         // inc arg count
         cur_fn->type->body.fn->num_args++;
+        if (++cur_fn->type->body.fn->num_args >= AST_MAX_ARGS) {
+            // max args reached
+            // TODO error
+            return NULL;
+        }
         // check if another arg or done
         ts = token_peek_check(state, TOKEN_PFX(SEPRATOR));
         if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
@@ -324,13 +329,15 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 // check if exists in current scope
                 parent = cur_fn;
                 while (parent != NULL) {
-                    b = symbol_table_find(parent->type->body.fn->symbols, state->next, state->s);
-                    if (b != NULL) break;
+                    if ((b = symbol_table_find(parent->type->body.fn->symbols, state->next, state->s)) != NULL) break;
                     parent = parent->parent;
                 }
                 // not in parent add to cur
                 if (b == NULL) {
-                    b = symbol_table_findsert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(LOCAL), state->next, state->s);
+                    if ((b = symbol_table_insert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(LOCAL), state->next, state->s)) == NULL) {
+                        // should never happen
+                        return PARSER_STATUS_PFX(VAR_INSERT_FAIL);
+                    }
                     // inc local count
                     cur_fn->type->body.fn->num_locals++;
                     n = ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b });
@@ -454,16 +461,16 @@ parser_status parse_stmts(parser_state *const state, ast_fn_node *const cur_fn, 
 parser_status parse_module(parser_state *const state, const char *const filename) {
     int fd;
     if ((fd = file_open_r(filename)) == -1) {
-        error_errno(state->e);
+        // TODO error
         return PARSER_STATUS_PFX(CANNOT_OPEN_FILE);
     }
     if ((state->s = file_read_to_string(fd)) == NULL) {
-        error_errno(state->e);
+        // TODO error
         file_close(fd);
         return PARSER_STATUS_PFX(CANNOT_READ_FILE);
     }
     if (file_close(fd) == -1) {
-        error_errno(state->e);
+        // TODO error
         string_free(state->s);
         return PARSER_STATUS_PFX(CANNOT_CLOSE_FILE);
     }

@@ -10,13 +10,15 @@
 typedef enum {
     ERROR_PFX(OK),
     ERROR_PFX(ERRNO),
-    ERROR_PFX(MESSAGE)
+    ERROR_PFX(PARSER),
 } error_type;
 
 typedef struct {
     error_type type;
-    int no;
     string *msg;
+    union {
+        int eno;
+    } data;
 } error;
 
 inline error *error_init(void) {
@@ -25,11 +27,6 @@ inline error *error_init(void) {
 
 inline void error_free(error *e) {
     free(e);
-}
-
-inline void error_errno(error *const e) {
-    e->type = ERROR_PFX(ERRNO);
-    e->no = errno;
 }
 
 inline void errno_print_exit(void) {
