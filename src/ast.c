@@ -38,6 +38,7 @@ const char *ast_type_string(ast_type type) {
         "VAR",
         "INT",
         "CHAR",
+        "VEC",
         "FN",
         "CALL",
         "IF",

@@ -62,13 +62,13 @@ static size_t hash_symbol(const token *const t, const string *const s) {
     return hash;
 }
 
-static symbol_table_bucket *compare_buckets(symbol_table_bucket* b, const token *const t, const string *const s) {
+static bool compare_buckets(const symbol_table_bucket *const b, const token *const t, const string *const s) {
     size_t i = 0;
     size_t len = token_len(t);
     if (len != b->size_len - 1) return NULL; // if they are not the same length no match
     for (; i <= len; i++) if (s->buffer[i + t->start_idx] != b->symbol[i]) break;
-    if (i == len) return b;
-    return NULL;
+    if (i == len) true;
+    return false;
 }
 
 static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t symbol_counter, const token *const t, const string *const s) {
@@ -82,8 +82,18 @@ static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t sym
     return b;
 }
 
-// TODO separate insert fn for agrs
-symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_type table_type, const token *const t, const string *const s) {
+symbol_table_bucket *symbol_table_find(symbol_table *table, const token *const t, const string *const s) {
+    size_t hash_idx = hash_symbol(t, s) % table->size;
+    if (table->buckets[hash_idx] == NULL) return NULL;
+    symbol_table_bucket *b = table->buckets[hash_idx];
+    while (b != NULL) {
+        if (compare_buckets(b, t, s) == true) return b;
+        b = b->next;
+    }
+    return NULL;
+}
+
+symbol_table_bucket *_symbol_table_findsert(symbol_table **table, symbol_table_type table_type, const token *const t, const string *const s, bool insert_only) {
     // TODO resize
     // check if the symbol is in table
     size_t hash_idx = hash_symbol(t, s) % (*table)->size;
@@ -94,25 +104,19 @@ symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_ty
     }
     symbol_table_bucket *b = (*table)->buckets[hash_idx];
     while (b != NULL) {
-        symbol_table_bucket *tmp = compare_buckets(b, t, s);
-        if (tmp != NULL) return tmp;
+        if (compare_buckets(b, t, s) == true) {
+            if (insert_only == true) return NULL; // found but should not exist
+            else return b;
+        }
         b = b->next;
     }
     b->next = bucket_init(table_type, (*table)->symbol_counter++, t, s);
     return b->next;
 }
 
-symbol_table_bucket *symbol_table_find(symbol_table *table, const token *const t, const string *const s) {
-    size_t hash_idx = hash_symbol(t, s) % table->size;
-    if (table->buckets[hash_idx] == NULL) return NULL;
-    symbol_table_bucket *b = table->buckets[hash_idx];
-    while (b != NULL) {
-        symbol_table_bucket *tmp = compare_buckets(b, t, s);
-        if (tmp != NULL) return tmp;
-        b = b->next;
-    }
-    return NULL;
-}
+extern inline symbol_table_bucket *symbol_table_insert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s);
+
+extern inline symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s);
 
 extern inline var_type *var_type_init(var_type_header header, var_type_body body);
 

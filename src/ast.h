@@ -15,6 +15,7 @@ typedef enum {
     AST_PFX(VAR),
     AST_PFX(INT),
     AST_PFX(CHAR),
+    AST_PFX(VEC),
     AST_PFX(FN),
     AST_PFX(CALL),
     AST_PFX(IF),
@@ -71,11 +72,11 @@ typedef struct {
 } ast_if_node;
 
 typedef union {
+    symbol_table_bucket *var;
     ast_op_node *op;
+    ast_call_node *call;
     ast_fn_node *fn;
     ast_if_node *ifn;
-    ast_call_node *call;
-    symbol_table_bucket *var;
 } ast_data;
 
 typedef struct _ast_node {
