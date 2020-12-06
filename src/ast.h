@@ -29,7 +29,7 @@ typedef enum {
     AST_PFX(EQUAL),
     AST_PFX(LESSEQUAL),
     AST_PFX(_END_OP)
-} ast_type;
+}  ast_type;
 
 typedef struct _ast_node ast_node;
 
@@ -114,7 +114,7 @@ inline ast_node_link *ast_node_link_init(void) {
 
 inline void ast_node_link_free(ast_node_link *head) {
     while (head != NULL) {
-        ast_node_free(head->node);
+        if (head->node != NULL) ast_node_free(head->node);
         ast_node_link *tmp = head;
         head = head->next;
         free(tmp);
@@ -203,6 +203,6 @@ inline void ast_node_holder_free(ast_node_holder *holder) {
     free(holder);
 }
 
-bool is_value(ast_node *const n);
+bool is_value(const ast_node *const n);
 
-bool is_op(ast_node *const n);
+bool is_op(const ast_node *const n);

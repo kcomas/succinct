@@ -81,6 +81,7 @@ static ast_vec_node *parser_vec(parser_state *const state, ast_fn_node *const cu
                 vec_node->items_tail->node = holder->node;
             } else {
                 vec_node->items_tail->next = ast_node_link_init();
+                vec_node->items_tail = vec_node->items_tail->next;
                 vec_node->items_tail->node = holder->node;
             }
             holder->node = NULL;
@@ -346,6 +347,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
     // init the fn node list
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
         switch (state->next->type) {
+            case TOKEN_PFX(COMMENT): continue;
             case TOKEN_PFX(NEWLINE):
                 if (cur_node == NULL) continue;
                 return wire_final_value(value_tmp, cur_node, PARSER_STATUS_PFX(SOME));

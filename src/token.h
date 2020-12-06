@@ -12,6 +12,7 @@
 typedef enum {
     TOKEN_PFX(_START_TOKENS),
     TOKEN_PFX(UNKNOWN),
+    TOKEN_PFX(COMMENT),
     // Values
     TOKEN_PFX(VAR),
     TOKEN_PFX(INT),
@@ -32,6 +33,7 @@ typedef enum {
     TOKEN_PFX(ADD), // +
     TOKEN_PFX(SUB), // -
     TOKEN_PFX(MUL), // *
+    TOKEN_PFX(DIV), // /
     TOKEN_PFX(WRITE), // <&
     // Control Flow
     TOKEN_PFX(NEWLINE), // \n

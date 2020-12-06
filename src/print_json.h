@@ -5,13 +5,13 @@
 #include <stdio.h>
 #include "ast.h"
 
+void token_print_json(const token *const t, const string *const s);
+
 void symbol_table_bucket_print_json(const symbol_table_bucket *const b);
 
 void symbol_table_print_json(const symbol_table *const table);
 
 void var_type_print_json(const var_type *const t);
-
-void token_print_json(const token *const t, const string *const s);
 
 void ast_vec_node_print_json(const ast_vec_node *const vec, const string *const s);
 

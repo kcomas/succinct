@@ -11,6 +11,7 @@ const char *token_type_string(token_type type) {
     static const char *types[] = {
         "_START_TOKENS",
         "UNKNOWN",
+        "COMMENT",
         "VAR",
         "INT",
         "CHAR",
@@ -27,6 +28,7 @@ const char *token_type_string(token_type type) {
         "ADD",
         "SUB",
         "MUL",
+        "DIV",
         "WRITE",
         "NEWLINE",
         "SEPRATOR",
@@ -35,7 +37,7 @@ const char *token_type_string(token_type type) {
         "LESS",
         "LESSEQUAL",
         "AND",
-        "_MAX_TOKENS"
+        "_END_TOKENS"
     };
     return type > TOKEN_PFX(_START_TOKENS) && type < TOKEN_PFX(_END_TOKENS) ? types[type] : "TOKEN_TYPE_NOT_FOUND";
 };
@@ -133,6 +135,13 @@ static token_status parse_string(token* const t, const string *const s) {
     return TOKEN_STATUS_PFX(SOME);
 }
 
+static token_status parse_comment(token* const t, const string *const s) {
+    // on thing after //
+    while (get_char(t, s) != '\n') next_char_update(t);
+    t->type = TOKEN_PFX(COMMENT);
+    return TOKEN_STATUS_PFX(SOME);
+}
+
 static bool char_lookup_one(token *const t, const string *const s, char cmp) {
     if (peek_char(t, s) == cmp) {
         next_char_update(t);
@@ -166,6 +175,11 @@ token_status token_next(token *const t, const string *const s) {
         case '+': return found_token(t, TOKEN_PFX(ADD));
         case '-': return found_token(t, TOKEN_PFX(SUB));
         case '*': return found_token(t, TOKEN_PFX(MUL));
+        case '/':
+            if (char_lookup_one(t, s, '/')) // comment
+                return parse_comment(t, s);
+            else
+                return found_token(t, TOKEN_PFX(DIV));
         case '\n':
                   newline_update(t);
                   return found_token(t, TOKEN_PFX(NEWLINE));

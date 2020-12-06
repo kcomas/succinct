@@ -1,6 +1,32 @@
 
 #include "print_json.h"
 
+static void print_token_string(const token *const t, const string *const s) {
+    for(size_t i = t->start_idx; i <= t->end_idx; i++) {
+        if (s->buffer[i] == '\n') {
+            printf("\\n");
+        } else {
+            if (s->buffer[i] == '"') putchar('\\');
+            putchar(s->buffer[i]);
+        }
+    }
+}
+
+void token_print_json(const token *const t, const string *const s) {
+    printf("{\"type\":\"%s\",\"line\":%lu,\"char\":%lu,\"len\":%lu,\"str\":\"", token_type_string(t->type), t->line_no, t->char_no, token_len(t));
+    switch (t->type) {
+        case TOKEN_PFX(COMMENT):
+            print_token_string(t, s);
+            break;
+        case TOKEN_PFX(NEWLINE):
+            printf("\\n");
+            break;
+        default:
+            print_token_string(t, s);
+            break;
+    }
+    printf("\"}");
+}
 
 void symbol_table_bucket_print_json(const symbol_table_bucket *const b) {
     printf("{\"symbol_table_type\":\"%s\",\"symbol_idx\":%lu,\"size_len\":%lu,", symbol_table_type_string(b->table_type), b->symbol_idx, b->size_len);
@@ -40,21 +66,14 @@ void var_type_print_json(const var_type *const t) {
     printf("}}");
 }
 
-void token_print_json(const token *const t, const string *const s) {
-    printf("{\"type\":\"%s\",\"line\":%lu,\"char\":%lu,\"len\":%lu,\"str\":\"", token_type_string(t->type), t->line_no, t->char_no, token_len(t));
-    if (t->type == TOKEN_PFX(NEWLINE)) {
-        printf("\\n");
-    } else {
-        for(size_t i = t->start_idx; i <= t->end_idx; i++) {
-            if (s->buffer[i] == '"') putchar('\\');
-            putchar(s->buffer[i]);
-        }
-    }
-    printf("\"}");
-}
-
 void ast_vec_node_print_json(const ast_vec_node *const vec, const string *const s) {
-
+    printf("{\"num_items\":%lu,\"type\":", vec->num_items);
+    if (vec->type != NULL) var_type_print_json(vec->type);
+    else printf("null");
+    putchar(',');
+    printf("\"items\":");
+    ast_node_link_print_json(vec->items_head, s);
+    putchar('}');
 }
 
 void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s) {
@@ -62,7 +81,7 @@ void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s) 
     var_type_print_json(fn->type);
     printf(",\"parent\":");
     if (fn->parent != NULL) ast_fn_node_print_json(fn->parent, s);
-    else printf("{}");
+    else printf("null");
     printf(",\"body\":");
     ast_node_link_print_json(fn->body_head, s);
     putchar('}');
@@ -106,9 +125,10 @@ void ast_node_print_json(const ast_node *const node, const string *const s) {
             break;
         case AST_PFX(INT):
         case AST_PFX(CHAR):
-            printf("{}");
+            printf("null");
             break;
         case AST_PFX(VEC):
+            ast_vec_node_print_json(node->data.vec, s);
             break;
         case AST_PFX(FN):
             ast_fn_node_print_json(node->data.fn, s);
@@ -117,14 +137,18 @@ void ast_node_print_json(const ast_node *const node, const string *const s) {
             ast_call_node_print_json(node->data.call, s);
             break;
         default:
-            // op node
-            printf("{\"return_type\":");
-            var_type_print_json(node->data.op->return_type);
-            printf(",\"left\":");
-            ast_node_print_json(node->data.op->left, s);
-            printf(",\"right\":");
-            ast_node_print_json(node->data.op->right, s);
-            putchar('}');
+            if (is_op(node)) {
+                // op node
+                printf("{\"return_type\":");
+                var_type_print_json(node->data.op->return_type);
+                printf(",\"left\":");
+                ast_node_print_json(node->data.op->left, s);
+                printf(",\"right\":");
+                ast_node_print_json(node->data.op->right, s);
+                putchar('}');
+            } else {
+                printf("{\"error\":\"UNKNOWN_NODE\"}");
+            }
             break;
     }
     putchar(',');

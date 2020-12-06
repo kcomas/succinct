@@ -3,6 +3,7 @@
 
 #include "file.h"
 #include "ast.h"
+#include "print_json.h"
 
 #define PARSER_STATUS_PFX(NAME) PARSER_STATUS_##NAME
 

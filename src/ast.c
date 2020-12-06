@@ -91,10 +91,10 @@ extern inline ast_node_holder *ast_node_holder_init(void);
 
 extern inline void ast_node_holder_free(ast_node_holder *holder);
 
-bool is_value(ast_node *const n) {
+bool is_value(const ast_node *const n) {
     return n->type > AST_PFX(_VALUE) && n->type < AST_PFX(_END_VALUE);
 }
 
-bool is_op(ast_node *const n) {
+bool is_op(const ast_node *const n) {
     return n->type > AST_PFX(_OP) && n->type < AST_PFX(_END_OP);
 }
