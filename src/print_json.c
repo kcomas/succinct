@@ -53,47 +53,8 @@ void token_print_json(const token *const t, const string *const s) {
     printf("\"}");
 }
 
-void ast_node_print_json(const ast_node *const node, const string *const s) {
-    printf("{\"type\":\"%s\",\"data\":", ast_type_string(node->type));
-    switch (node->type) {
-        case AST_PFX(VAR):
-            symbol_table_bucket_print_json(node->data.var);
-            break;
-        case AST_PFX(INT):
-            printf("{}");
-            break;
-        case AST_PFX(FN):
-            ast_fn_node_print_json(node->data.fn, s);
-            break;
-        case AST_PFX(CALL):
-            ast_call_node_print_json(node->data.call, s);
-            break;
-        default:
-            // op node
-            printf("{\"return_type\":");
-            var_type_print_json(node->data.op->return_type);
-            printf(",\"left\":");
-            ast_node_print_json(node->data.op->left, s);
-            printf(",\"right\":");
-            ast_node_print_json(node->data.op->right, s);
-            putchar('}');
-            break;
-    }
-    putchar(',');
-    printf("\"token\":");
-    token_print_json(node->t, s);
-    putchar('}');
-}
+void ast_vec_node_print_json(const ast_vec_node *const vec, const string *const s) {
 
-void ast_node_link_print_json(ast_node_link *head, const string *const s) {
-    // print all links
-    putchar('[');
-    while (head != NULL) {
-        if (head->node) ast_node_print_json(head->node, s);
-        if (head->next != NULL && head->next->node) putchar(',');
-        head = head->next;
-    }
-    putchar(']');
 }
 
 void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s) {
@@ -135,4 +96,50 @@ void ast_if_node_print_json(const ast_if_node *const if_node, const string *cons
     printf("],\"else\":");
     ast_node_link_print_json(if_node->else_head, s);
     putchar('}');
+}
+
+void ast_node_print_json(const ast_node *const node, const string *const s) {
+    printf("{\"type\":\"%s\",\"data\":", ast_type_string(node->type));
+    switch (node->type) {
+        case AST_PFX(VAR):
+            symbol_table_bucket_print_json(node->data.var);
+            break;
+        case AST_PFX(INT):
+        case AST_PFX(CHAR):
+            printf("{}");
+            break;
+        case AST_PFX(VEC):
+            break;
+        case AST_PFX(FN):
+            ast_fn_node_print_json(node->data.fn, s);
+            break;
+        case AST_PFX(CALL):
+            ast_call_node_print_json(node->data.call, s);
+            break;
+        default:
+            // op node
+            printf("{\"return_type\":");
+            var_type_print_json(node->data.op->return_type);
+            printf(",\"left\":");
+            ast_node_print_json(node->data.op->left, s);
+            printf(",\"right\":");
+            ast_node_print_json(node->data.op->right, s);
+            putchar('}');
+            break;
+    }
+    putchar(',');
+    printf("\"token\":");
+    token_print_json(node->t, s);
+    putchar('}');
+}
+
+void ast_node_link_print_json(ast_node_link *head, const string *const s) {
+    // print all links
+    putchar('[');
+    while (head != NULL) {
+        if (head->node) ast_node_print_json(head->node, s);
+        if (head->next != NULL && head->next->node) putchar(',');
+        head = head->next;
+    }
+    putchar(']');
 }

@@ -45,7 +45,7 @@ static parser_status wire_final_value(ast_node *const value_tmp, ast_node *const
 }
 
 static ast_node* make_op(const parser_state *const state, ast_type type) {
-    return ast_node_init(type, state->next, (ast_data) { .op = ast_op_node_init() });
+    return ast_node_init(type, (ast_data) { .op = ast_op_node_init() }, state->next);
 }
 
 static var_type *parse_var_type(parser_state* const state) {
@@ -62,15 +62,43 @@ static var_type *parse_var_type(parser_state* const state) {
     return NULL;
 }
 
-/*
-static ast_node *parser_vec(parser_state *const state, ast_fn_node *const cur_fn) {
+static ast_vec_node *parser_vec(parser_state *const state, ast_fn_node *const cur_fn) {
     // at first statement after [
     if (parser_mode_push(state, PARSER_MODE_PFX(VEC_BODY)) == false) {
         // TODO error
         return NULL;
     }
+    ast_vec_node *vec_node = ast_vec_node_init();
+    ast_node_holder *holder = ast_node_holder_init();
+    parser_status ps;
+    for(;;) {
+        ps = parse_stmt(state, cur_fn, holder);
+        if (holder->node != NULL) {
+            vec_node->num_items++;
+            if (vec_node->items_head == NULL) {
+                vec_node->items_head = ast_node_link_init();
+                vec_node->items_tail = vec_node->items_head;
+                vec_node->items_tail->node = holder->node;
+            } else {
+                vec_node->items_tail->next = ast_node_link_init();
+                vec_node->items_tail->node = holder->node;
+            }
+            holder->node = NULL;
+        }
+        if (ps == PARSER_STATUS_PFX(DONE)) break;
+        if (ps != PARSER_STATUS_PFX(SOME)) {
+            // TODO error
+            return NULL;
+        }
+    }
+    if (parser_mode_pop(state) == false) {
+        // TODO error
+        return NULL;
+    }
+    ast_node_holder_free(holder);
+    // type is added later
+    return vec_node;
 }
-*/
 
 static ast_node *parse_check_call(parser_state *const state, ast_fn_node *const cur_fn, ast_node *const func) {
     // checks for fn call returns the assumed func with no error if not found
@@ -105,7 +133,7 @@ static ast_node *parse_check_call(parser_state *const state, ast_fn_node *const 
             // TODO error
             return false;
         }
-        return ast_node_init(AST_PFX(CALL), state->next, (ast_data) { .call = ast_call_node_init(func, num_args, ast_args) });
+        return ast_node_init(AST_PFX(CALL), (ast_data) { .call = ast_call_node_init(func, num_args, ast_args) }, state->next);
     } else if (ts != TOKEN_STATUS_PFX(SOME)) {
         // TODO error
         return NULL;
@@ -268,16 +296,16 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
             if (ts != TOKEN_STATUS_PFX(SOME)) {
                 // TODO error
                 return NULL;
-            } else if (state->next->type == TOKEN_PFX(RBRACE)) {
+            }
+            if (state->next->type == TOKEN_PFX(RBRACE)) {
                 if (parser_mode_pop(state) == false) {
                     // TODO error
                     return NULL;
                 }
                 break;
-            } else {
-                // TODO error
-                return NULL;
             }
+            // TODO error
+            return NULL;
         }
         if (state->next->type != TOKEN_PFX(LBRACE)) {
             // TODO error
@@ -314,6 +342,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
     ast_node *cur_node = NULL;
     ast_fn_node *fn, *parent;
     ast_if_node *if_node;
+    ast_vec_node *vec_node;
     // init the fn node list
     while ((ts = token_next(state->next, state->s)) == TOKEN_STATUS_PFX(SOME)) {
         switch (state->next->type) {
@@ -321,7 +350,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 if (cur_node == NULL) continue;
                 return wire_final_value(value_tmp, cur_node, PARSER_STATUS_PFX(SOME));
             case TOKEN_PFX(SEPRATOR):
-                if (parser_mode_get(state) == PARSER_MODE_PFX(FN_CALL_ARGS))
+                if (parser_mode_get(state) == PARSER_MODE_PFX(FN_CALL_ARGS) || parser_mode_get(state) == PARSER_MODE_PFX(VEC_BODY))
                     return wire_final_value(value_tmp, cur_node, PARSER_STATUS_PFX(SOME));
                 break;
             case TOKEN_PFX(VAR):
@@ -340,10 +369,10 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                     }
                     // inc local count
                     cur_fn->type->body.fn->num_locals++;
-                    n = ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b });
+                    n = ast_node_init(AST_PFX(VAR), (ast_data) { .var = b }, state->next);
                 } else {
                     // check if fn call
-                    if ((n = parse_check_call(state, cur_fn, ast_node_init(AST_PFX(VAR), state->next, (ast_data) { .var = b }))) == NULL) {
+                    if ((n = parse_check_call(state, cur_fn, ast_node_init(AST_PFX(VAR), (ast_data) { .var = b }, state->next))) == NULL) {
                         // TODO error
                         return PARSER_STATUS_PFX(INVALID_CALL);
                     }
@@ -351,7 +380,10 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 b = NULL;
                 break;
             case TOKEN_PFX(INT):
-                n = ast_node_init(AST_PFX(INT), state->next, (ast_data) {});
+                n = ast_node_init(AST_PFX(INT), (ast_data) {}, state->next);
+                break;
+            case TOKEN_PFX(CHAR):
+                n = ast_node_init(AST_PFX(CHAR), (ast_data) {}, state->next);
                 break;
             case TOKEN_PFX(LBRACE):
                 ts = token_peek_check(state, TOKEN_PFX(LPARENS));
@@ -359,7 +391,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                     if ((fn = parse_fn(state, cur_fn)) == NULL) {
                         // TODO error
                     }
-                    n = ast_node_init(AST_PFX(FN), state->next, (ast_data) { .fn = fn });
+                    n = ast_node_init(AST_PFX(FN), (ast_data) { .fn = fn }, state->next);
                 } else if (ts != TOKEN_STATUS_PFX(SOME)) {
                     // TODO error
                 }
@@ -369,7 +401,15 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                     return wire_final_value(value_tmp, cur_node, PARSER_STATUS_PFX(DONE));
                 break;
             case TOKEN_PFX(LBRACKET):
-                exit(12);
+                if ((vec_node = parser_vec(state, cur_fn)) == NULL) {
+                    // TODO error
+                    return PARSER_STATUS_PFX(INVALID_VEC);
+                }
+                n = ast_node_init(AST_PFX(VEC), (ast_data) { .vec = vec_node }, state->next);
+                break;
+            case TOKEN_PFX(RBRACKET):
+                if (parser_mode_get(state) == PARSER_MODE_PFX(VEC_BODY))
+                    return wire_final_value(value_tmp, cur_node, PARSER_STATUS_PFX(DONE));
                 break;
             case TOKEN_PFX(RPARENS):
                 if (parser_mode_get(state) == PARSER_MODE_PFX(IF_COND) || parser_mode_get(state) == PARSER_MODE_PFX(FN_CALL_ARGS))
@@ -408,7 +448,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                         return PARSER_STATUS_PFX(INVALID_IF);
                     }
                     // TODO wire if
-                    n = ast_node_init(AST_PFX(IF), state->next, (ast_data) { .ifn = if_node });
+                    n = ast_node_init(AST_PFX(IF), (ast_data) { .ifn = if_node }, state->next);
                 } else if (ts != TOKEN_STATUS_PFX(SOME)) {
                     // TODO error
                 }
@@ -444,10 +484,12 @@ parser_status parse_stmts(parser_state *const state, ast_fn_node *const cur_fn, 
     ast_node_holder *holder = ast_node_holder_init();
     parser_status ps;
     while ((ps = parse_stmt(state, cur_fn, holder)) == PARSER_STATUS_PFX(SOME)) {
-        tail->node = holder->node;
-        holder->node = NULL;
-        tail->next = ast_node_link_init();
-        tail = tail->next;
+        if (holder->node != NULL) {
+            tail->node = holder->node;
+            holder->node = NULL;
+            tail->next = ast_node_link_init();
+            tail = tail->next;
+        }
     }
     tail->node = holder->node;
     ast_node_holder_free(holder);

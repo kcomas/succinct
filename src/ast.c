@@ -1,36 +1,6 @@
 
 #include "ast.h"
 
-bool is_value(ast_node *const n) {
-    return n->type > AST_PFX(_VALUE) && n->type < AST_PFX(_END_VALUE);
-}
-
-bool is_op(ast_node *const n) {
-    return n->type > AST_PFX(_OP) && n->type < AST_PFX(_END_OP);
-}
-
-extern inline ast_node *ast_node_init(ast_type type, const token *const t, ast_data data);
-
-void ast_node_free(ast_node *node) {
-    if (node == NULL) return;
-    if (is_op(node)) {
-        ast_op_node_free(node->data.op);
-    } else {
-        switch (node->type) {
-            case AST_PFX(FN):
-                ast_fn_node_free(node->data.fn, true);
-                break;
-            case AST_PFX(CALL):
-                ast_call_node_free(node->data.call);
-                break;
-            default:
-                break;
-        }
-    }
-    token_free(node->t);
-    free(node);
-}
-
 const char *ast_type_string(ast_type type) {
     static const char *types[] = {
         "_VALUE",
@@ -55,9 +25,37 @@ const char *ast_type_string(ast_type type) {
     return type > AST_PFX(_VALUE) && type < AST_PFX(_END_OP) ? types[type] : "AST_TYPE_NOT_FOUND";
 }
 
+extern inline ast_node *ast_node_init(ast_type type, ast_data data, const token *const t);
+
+void ast_node_free(ast_node *node) {
+    switch (node->type) {
+        case AST_PFX(FN):
+            ast_fn_node_free(node->data.fn, true);
+            break;
+        case AST_PFX(CALL):
+            ast_call_node_free(node->data.call);
+            break;
+        case AST_PFX(IF):
+            ast_if_node_free(node->data.ifn);
+            break;
+        case AST_PFX(VEC):
+            ast_vec_node_free(node->data.vec);
+            break;
+        default:
+            if (is_op(node)) ast_op_node_free(node->data.op);
+            break;
+    }
+    token_free(node->t);
+    free(node);
+}
+
 extern inline ast_node_link *ast_node_link_init(void);
 
 extern inline void ast_node_link_free(ast_node_link *head);
+
+extern inline ast_vec_node *ast_vec_node_init(void);
+
+extern inline void ast_vec_node_free(ast_vec_node *v);
 
 extern inline ast_op_node *ast_op_node_init(void);
 
@@ -92,3 +90,11 @@ extern inline ast_if_cond *ast_if_cond_init(void);
 extern inline ast_node_holder *ast_node_holder_init(void);
 
 extern inline void ast_node_holder_free(ast_node_holder *holder);
+
+bool is_value(ast_node *const n) {
+    return n->type > AST_PFX(_VALUE) && n->type < AST_PFX(_END_VALUE);
+}
+
+bool is_op(ast_node *const n) {
+    return n->type > AST_PFX(_OP) && n->type < AST_PFX(_END_OP);
+}

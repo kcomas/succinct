@@ -33,7 +33,7 @@ int print_ast(const char *const file) {
     parser_state *state = parser_state_init();
     parser_status status = parse_module(state, file);
     if (status == PARSER_STATUS_PFX(DONE) || status == PARSER_STATUS_PFX(NONE)) ast_fn_node_print_json(state->root_fn, state->s);
-    parser_state_free(state);
+    // parser_state_free(state);
     return status;
 }
 

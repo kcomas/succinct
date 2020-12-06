@@ -39,9 +39,10 @@ typedef struct _ast_node_link {
 } ast_node_link;
 
 typedef struct {
-    var_type *return_type;
-    ast_node *left, *right;
-} ast_op_node;
+    size_t num_items;
+    var_type *type;
+    ast_node_link *items_head, *items_tail;
+} ast_vec_node;
 
 typedef struct _ast_fn_node {
     var_type *type;
@@ -71,12 +72,18 @@ typedef struct {
     ast_node_link *else_head, *else_tail;
 } ast_if_node;
 
+typedef struct {
+    var_type *return_type;
+    ast_node *left, *right;
+} ast_op_node;
+
 typedef union {
     symbol_table_bucket *var;
-    ast_op_node *op;
-    ast_call_node *call;
+    ast_vec_node *vec;
     ast_fn_node *fn;
+    ast_call_node *call;
     ast_if_node *ifn;
+    ast_op_node *op;
 } ast_data;
 
 typedef struct _ast_node {
@@ -89,17 +96,17 @@ typedef struct {
     ast_node *node;
 } ast_node_holder;
 
-inline ast_node *ast_node_init(ast_type type, const token *const t, ast_data data) {
+const char *ast_type_string(ast_type type);
+
+inline ast_node *ast_node_init(ast_type type, ast_data data, const token *const t) {
     ast_node *node = calloc(1, sizeof(ast_node));
     node->type = type;
-    node->t = token_copy(token_init(), t);
     node->data = data;
+    node->t = token_copy(token_init(), t);
     return node;
 }
 
 void ast_node_free(ast_node *node);
-
-const char *ast_type_string(ast_type type);
 
 inline ast_node_link *ast_node_link_init(void) {
     return calloc(1, sizeof(ast_node_link));
@@ -114,25 +121,18 @@ inline void ast_node_link_free(ast_node_link *head) {
     }
 }
 
-inline ast_node_holder *ast_node_holder_init(void) {
-    return calloc(1, sizeof(ast_node_holder));
+inline ast_vec_node *ast_vec_node_init(void) {
+    return calloc(1, sizeof(ast_vec_node));
 }
 
-inline void ast_node_holder_free(ast_node_holder *holder) {
-    free(holder);
-}
-
-inline ast_op_node *ast_op_node_init(void) {
-    ast_op_node *op = calloc(1, sizeof(ast_op_node));
-    op->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
-    return op;
-}
-
-inline void ast_op_node_free(ast_op_node *op) {
-    var_type_free(op->return_type);
-    ast_node_free(op->left);
-    ast_node_free(op->right);
-    free(op);
+inline void ast_vec_node_free(ast_vec_node *v) {
+    ast_node_link *head = v->items_head;
+    while (head != NULL) {
+        ast_node_link *tmp = head;
+        head = head->next;
+        free(tmp);
+    }
+    free(v);
 }
 
 inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent) {
@@ -180,6 +180,27 @@ inline ast_if_cond *ast_if_cond_init(void) {
     cond->body_head = ast_node_link_init();
     cond->body_tail = cond->body_head;
     return cond;
+}
+
+inline ast_op_node *ast_op_node_init(void) {
+    ast_op_node *op = calloc(1, sizeof(ast_op_node));
+    op->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
+    return op;
+}
+
+inline void ast_op_node_free(ast_op_node *op) {
+    var_type_free(op->return_type);
+    ast_node_free(op->left);
+    ast_node_free(op->right);
+    free(op);
+}
+
+inline ast_node_holder *ast_node_holder_init(void) {
+    return calloc(1, sizeof(ast_node_holder));
+}
+
+inline void ast_node_holder_free(ast_node_holder *holder) {
+    free(holder);
 }
 
 bool is_value(ast_node *const n);
