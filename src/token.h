@@ -46,6 +46,8 @@ typedef enum {
     TOKEN_PFX(_END_TOKENS)
 } token_type;
 
+const char *token_type_string(token_type type);
+
 typedef struct _token {
     token_type type;
     size_t char_no, line_no;
@@ -68,11 +70,14 @@ inline size_t token_len(const token *const t) {
     return t->end_idx - t->start_idx + 1;
 }
 
-const char *token_type_string(token_type type);
-
 inline token *token_copy(token *const dest, const token *const src) {
     return memcpy(dest, src, sizeof(token));
 }
+ inline token *token_init_copy(const token *const src) {
+    token *t = token_init();
+    token_copy(t, src);
+    return t;
+ }
 
 #define TOKEN_STATUS_PFX(NAME) TOKEN_STATUS_##NAME
 

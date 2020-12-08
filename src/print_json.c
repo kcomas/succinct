@@ -79,9 +79,11 @@ void ast_vec_node_print_json(const ast_vec_node *const vec, const string *const 
 void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s) {
     printf("{\"type\":");
     var_type_print_json(fn->type);
+    /*
     printf(",\"parent\":");
     if (fn->parent != NULL) ast_fn_node_print_json(fn->parent, s);
     else printf("null");
+    */
     printf(",\"body\":");
     ast_node_link_print_json(fn->body_head, s);
     putchar('}');
@@ -136,6 +138,9 @@ void ast_node_print_json(const ast_node *const node, const string *const s) {
         case AST_PFX(CALL):
             ast_call_node_print_json(node->data.call, s);
             break;
+        case AST_PFX(IF):
+            ast_if_node_print_json(node->data.ifn, s);
+            break;
         default:
             if (is_op(node)) {
                 // op node
@@ -166,4 +171,27 @@ void ast_node_link_print_json(ast_node_link *head, const string *const s) {
         head = head->next;
     }
     putchar(']');
+}
+
+void error_print_json(const error *const e, const string *const s) {
+    printf("{\"type\":\"%s\",", error_type_string(e->type));
+    switch (e->type) {
+        case ERROR_PFX(ERRNO):
+            printf("\"errno\":%d", e->data.eno);
+            break;
+        case ERROR_PFX(PARSER):
+            printf("\"stack_trace\":[");
+            for (size_t stack_head = 0; stack_head < e->data.parser->stack_head; stack_head++) {
+                printf("{\"mode\":\"%s\",\"status\":\"%s\",\"token\":", parser_mode_string(e->data.parser->stack[stack_head].mode), parser_status_string(e->data.parser->stack[stack_head].status));
+                token_print_json(e->data.parser->stack[stack_head].t, s);
+                putchar('}');
+                if (stack_head + 1 < e->data.parser->stack_head) putchar(',');
+            }
+            printf("]");
+            break;
+        default:
+            printf("null");
+            break;
+    }
+    putchar('}');
 }

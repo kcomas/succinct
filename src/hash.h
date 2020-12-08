@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "string.h"
+#include "def.h"
 #include "type.h"
 
 typedef struct _var var;
@@ -24,18 +25,6 @@ typedef enum {
     HASH_STATUS_PFX(OK),
     HASH_STATUS_PFX(KEY_NOT_IN_FIXED)
 } hash_status;
-
-#ifndef DEFAULT_HASH_SIZE
-    #define DEFAULT_HASH_SIZE 10
-#endif
-
-#ifndef MAX_REHASH
-    #define MAX_REHASH 5
-#endif
-
-#ifndef REHASH_SIZE_MULTIPLIER
-    #define REHASH_SIZE_MULTIPLIER 2
-#endif
 
 inline hash *hash_init(size_t size) {
     hash *h = calloc(1, sizeof(hash) + sizeof(hash_node) * size);

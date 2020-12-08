@@ -1,15 +1,67 @@
 
 #include "parser.h"
 
-extern inline parser_state *parser_state_init(void);
+const char *parser_mode_string(parser_mode mode) {
+    const char *modes[] = {
+        "NONE",
+        "MODULE",
+        "VEC_BODY",
+        "FN_CALL_ARGS",
+        "FN",
+        "IF_COND",
+        "IF_BODY",
+        "_END_MODE"
+    };
+    return mode >= PARSER_MODE_PFX(NONE) && mode < PARSER_MODE_PFX(_END_MODE) ? modes[mode] : "PARSER_MODE_NOT_FOUND";
+}
 
-extern inline void parser_state_free(parser_state *state);
+const char *parser_status_string(parser_status status) {
+    const char *statuses[] = {
+        "SOME",
+        "NONE",
+        "DONE",
+        "CANNOT_OPEN_FILE",
+        "CANNOT_READ_FILE",
+        "CANNOT_CLOSE_FILE",
+        "MODE_PUSH_FAIL",
+        "MODE_POP_FAIL",
+        "VAR_INSERT_FAIL",
+        "INVALID_VEC",
+        "INVALID_CALL",
+        "INVALID_IF",
+        "INVALID_TOKEN_SEQUENCE",
+        "INVALID_FINAL_VALUE",
+        "_END_PARSER_STATUS"
+    };
+    return status >= PARSER_STATUS_PFX(NONE) && status < PARSER_STATUS_PFX(_END_PARSER_STATUS) ? statuses[status] : "PARSER_STATUS_NOT_FOUND";
+}
+
+parser_state *parser_state_init(void) {
+    parser_state *state = calloc(1, sizeof(parser_state) + sizeof(parser_mode) * PARSER_MODE_MAX_STACK_SIZE);
+    // string is added before parse
+    state->next = token_init();
+    state->peek = token_init();
+    state->root_fn = ast_fn_node_init(NULL);
+    state->e = error_init();
+    return state;
+}
+
+void parser_state_free(parser_state *state) {
+    token_free(state->next);
+    token_free(state->peek);
+    if (state->s) string_free(state->s);
+    ast_fn_node_free(state->root_fn, true);
+    error_free(state->e);
+    free(state);
+}
 
 extern inline bool parser_mode_push(parser_state *const state, parser_mode mode);
 
-extern inline bool parser_mode_pop(parser_state *const state);
+extern inline parser_mode parser_mode_pop(parser_state *const state);
 
 extern inline parser_mode parser_mode_get(const parser_state *const state);
+
+extern inline parser_status parser_error(parser_state *const state, parser_status status);
 
 static token_status token_next_check(parser_state *const state, token_type type) {
     token_status ts;
@@ -92,7 +144,7 @@ static ast_vec_node *parser_vec(parser_state *const state, ast_fn_node *const cu
             return NULL;
         }
     }
-    if (parser_mode_pop(state) == false) {
+    if (parser_mode_pop(state) == PARSER_MODE_PFX(NONE)) {
         // TODO error
         return NULL;
     }
@@ -130,7 +182,7 @@ static ast_node *parse_check_call(parser_state *const state, ast_fn_node *const 
             return NULL;
         }
         ast_node_holder_free(holder);
-        if (parser_mode_pop(state) == false) {
+        if (parser_mode_pop(state) == PARSER_MODE_PFX(NONE)) {
             // TODO error
             return false;
         }
@@ -222,7 +274,7 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
         ast_fn_node_free(cur_fn, false);
         return NULL;
     }
-    if (parser_mode_pop(state) == false) {
+    if (parser_mode_pop(state) == PARSER_MODE_PFX(NONE)) {
         // TODO error
         return NULL;
     }
@@ -263,7 +315,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
             cond_node = ast_if_cond_init();
             cond_node->cond = cond_holder->node;
             cond_holder->node = NULL;
-            if (parser_mode_pop(state) == false) {
+            if (parser_mode_pop(state) == PARSER_MODE_PFX(NONE)) {
                 // TODO error
                 return NULL;
             }
@@ -299,7 +351,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
                 return NULL;
             }
             if (state->next->type == TOKEN_PFX(RBRACE)) {
-                if (parser_mode_pop(state) == false) {
+                if (parser_mode_pop(state) == PARSER_MODE_PFX(NONE)) {
                     // TODO error
                     return NULL;
                 }
@@ -318,7 +370,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
             ast_if_node_free(if_node);
             return NULL;
         }
-        if (parser_mode_pop(state) == false) {
+        if (parser_mode_pop(state) == PARSER_MODE_PFX(NONE)) {
             // TODO error
             return NULL;
         }
@@ -367,7 +419,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 if (b == NULL) {
                     if ((b = symbol_table_insert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(LOCAL), state->next, state->s)) == NULL) {
                         // should never happen
-                        return PARSER_STATUS_PFX(VAR_INSERT_FAIL);
+                        return parser_error(state, PARSER_STATUS_PFX(VAR_INSERT_FAIL));
                     }
                     // inc local count
                     cur_fn->type->body.fn->num_locals++;
@@ -376,7 +428,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                     // check if fn call
                     if ((n = parse_check_call(state, cur_fn, ast_node_init(AST_PFX(VAR), (ast_data) { .var = b }, state->next))) == NULL) {
                         // TODO error
-                        return PARSER_STATUS_PFX(INVALID_CALL);
+                        return parser_error(state, PARSER_STATUS_PFX(INVALID_CALL));
                     }
                 }
                 b = NULL;
@@ -405,7 +457,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
             case TOKEN_PFX(LBRACKET):
                 if ((vec_node = parser_vec(state, cur_fn)) == NULL) {
                     // TODO error
-                    return PARSER_STATUS_PFX(INVALID_VEC);
+                    return parser_error(state, PARSER_STATUS_PFX(INVALID_VEC));
                 }
                 n = ast_node_init(AST_PFX(VEC), (ast_data) { .vec = vec_node }, state->next);
                 break;
@@ -447,7 +499,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                     // if stmt
                     if ((if_node = parse_if(state, cur_fn)) == NULL) {
                         // TODO error
-                        return PARSER_STATUS_PFX(INVALID_IF);
+                        return parser_error(state, PARSER_STATUS_PFX(INVALID_IF));
                     }
                     // TODO wire if
                     n = ast_node_init(AST_PFX(IF), (ast_data) { .ifn = if_node }, state->next);
@@ -474,12 +526,12 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
             cur_node->data.op->right = n;
             cur_node = n;
         } else {
-            return PARSER_STATUS_PFX(INVALID_TOKEN_SEQUENCE);
+            return parser_error(state, PARSER_STATUS_PFX(INVALID_TOKEN_SEQUENCE));
         }
     }
     // newline or ; denote success
     // TODO check if at end of string
-    return PARSER_STATUS_PFX(NONE);
+    return n == NULL ? PARSER_STATUS_PFX(DONE) : parser_error(state, PARSER_STATUS_PFX(NONE));
 }
 
 parser_status parse_stmts(parser_state *const state, ast_fn_node *const cur_fn, ast_node_link *tail) {
@@ -493,11 +545,11 @@ parser_status parse_stmts(parser_state *const state, ast_fn_node *const cur_fn, 
             tail = tail->next;
         }
     }
-    tail->node = holder->node;
+    if (holder->node != NULL) tail->node = holder->node;
     ast_node_holder_free(holder);
     if (ps != PARSER_STATUS_PFX(DONE)) {
         // TODO error
-        return ps;
+        return parser_error(state, ps);
     }
     return ps;
 }
@@ -506,26 +558,27 @@ parser_status parse_module(parser_state *const state, const char *const filename
     int fd;
     if ((fd = file_open_r(filename)) == -1) {
         // TODO error
-        return PARSER_STATUS_PFX(CANNOT_OPEN_FILE);
+        return parser_error(state, PARSER_STATUS_PFX(CANNOT_OPEN_FILE));
     }
     if ((state->s = file_read_to_string(fd)) == NULL) {
         // TODO error
         file_close(fd);
-        return PARSER_STATUS_PFX(CANNOT_READ_FILE);
+        return parser_error(state, PARSER_STATUS_PFX(CANNOT_READ_FILE));
     }
     if (file_close(fd) == -1) {
         // TODO error
         string_free(state->s);
-        return PARSER_STATUS_PFX(CANNOT_CLOSE_FILE);
+        return parser_error(state, PARSER_STATUS_PFX(CANNOT_CLOSE_FILE));
     }
     if (parser_mode_push(state, PARSER_MODE_PFX(MODULE)) == false) {
         // TODO error
-        return PARSER_STATUS_PFX(MODE_PUSH_FAIL);
+        return parser_error(state, PARSER_STATUS_PFX(MODE_PUSH_FAIL));
     }
     parser_status ps = parse_stmts(state, state->root_fn, state->root_fn->body_tail);
-    if (parser_mode_pop(state) == false) {
+    if (ps != PARSER_STATUS_PFX(SOME) || ps != PARSER_STATUS_PFX(DONE)) return parser_error(state, ps);
+    if (parser_mode_pop(state) == PARSER_MODE_PFX(NONE)) {
         // TODO error
-        return PARSER_STATUS_PFX(MODE_POP_FAIL);
+        return parser_error(state, PARSER_STATUS_PFX(MODE_POP_FAIL));
     }
     return ps;
 }

@@ -1,12 +1,6 @@
 
 #include "token.h"
 
-extern inline token *token_init(void);
-
-extern inline void token_free(token *t);
-
-extern inline size_t token_len(const token *const t);
-
 const char *token_type_string(token_type type) {
     static const char *types[] = {
         "_START_TOKENS",
@@ -40,9 +34,17 @@ const char *token_type_string(token_type type) {
         "_END_TOKENS"
     };
     return type > TOKEN_PFX(_START_TOKENS) && type < TOKEN_PFX(_END_TOKENS) ? types[type] : "TOKEN_TYPE_NOT_FOUND";
-};
+}
+
+extern inline token *token_init(void);
+
+extern inline void token_free(token *t);
+
+extern inline size_t token_len(const token *const t);
 
 extern inline token *token_copy(token *const dest, const token *const src);
+
+extern inline token *token_init_copy(const token *const src);
 
 static void next_char_update(token *const t) {
     t->end_idx++;

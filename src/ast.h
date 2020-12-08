@@ -4,6 +4,7 @@
 #include "string.h"
 #include "error.h"
 #include "type.h"
+#include "def.h"
 #include "token.h"
 
 #define AST_PFX(NAME) AST_##NAME
@@ -49,10 +50,6 @@ typedef struct _ast_fn_node {
     struct _ast_fn_node *parent; // if null we are at the module level
     ast_node_link *body_head, *body_tail;
 } ast_fn_node;
-
-#ifndef AST_MAX_ARGS
-    #define AST_MAX_ARGS 4
-#endif
 
 typedef struct {
     size_t num_args;

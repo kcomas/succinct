@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "def.h"
 #include "token.h"
 
 #define VAR_PFX(NAME) VAR_##NAME
@@ -86,10 +87,6 @@ inline symbol_table_bucket *symbol_table_insert(symbol_table **table, symbol_tab
 inline symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s) {
     return _symbol_table_findsert(table, type, t, s, false);
 }
-
-#ifndef DEFAULT_SYMBOL_TABLE_SIZE
-    #define DEFAULT_SYMBOL_TABLE_SIZE 20
-#endif
 
 typedef struct {
     size_t num_args, num_locals;

@@ -3,7 +3,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "ast.h"
+#include "parser.h"
+#include "error.h"
 
 void token_print_json(const token *const t, const string *const s);
 
@@ -24,3 +25,5 @@ void ast_if_node_print_json(const ast_if_node *const if_node, const string *cons
 void ast_node_print_json(const ast_node *const node, const string *const s);
 
 void ast_node_link_print_json(ast_node_link *head, const string *const s);
+
+void error_print_json(const error *const e, const string *const s);
