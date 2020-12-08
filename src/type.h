@@ -92,7 +92,7 @@ typedef struct {
     size_t num_args, num_locals;
     var_type *return_type;
     symbol_table* symbols;
-} var_type_body_fn; // module has void return type and symbol table
+} var_type_fn; // module has void return type and symbol table
 
 typedef union {
     struct {
@@ -104,7 +104,7 @@ typedef union {
         var_type *dynamic; // all keys have this type
         symbol_table *keys;
     } *hash;
-    var_type_body_fn *fn;
+    var_type_fn *fn;
 } var_type_body;
 
 typedef struct _var_type {
@@ -122,8 +122,14 @@ inline var_type *var_type_init(var_type_header header, var_type_body body) {
 void var_type_free(var_type *t);
 
 inline var_type *var_type_fn_init(size_t symbol_table_size) {
-    var_type_body_fn *fn = calloc(1, sizeof(var_type_body_fn));
+    var_type_fn *fn = calloc(1, sizeof(var_type_fn));
     fn->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
     fn->symbols = symbol_table_init(symbol_table_size);
     return var_type_init(VAR_PFX(FN), (var_type_body) { .fn = fn });
+}
+
+inline void var_type_fn_free(var_type_fn *fn) {
+    var_type_free(fn->return_type);
+    symbol_table_free(fn->symbols);
+    free(fn);
 }

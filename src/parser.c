@@ -50,7 +50,7 @@ void parser_state_free(parser_state *state) {
     token_free(state->next);
     token_free(state->peek);
     if (state->s) string_free(state->s);
-    ast_fn_node_free(state->root_fn, true);
+    ast_fn_node_free(state->root_fn);
     error_free(state->e);
     free(state);
 }
@@ -208,20 +208,20 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
         // find arg name
         if (state->next->type != TOKEN_PFX(VAR)) {
             // TODO set error
-            ast_fn_node_free(cur_fn, false);
+            ast_fn_node_free(cur_fn);
             return NULL;
         }
         token arg_name;
         token_copy(&arg_name, state->next);
         if ((ts = token_next_check(state, TOKEN_PFX(DEFINE))) != TOKEN_STATUS_PFX(SOME)) {
             // TODO set error
-            ast_fn_node_free(cur_fn, false);
+            ast_fn_node_free(cur_fn);
             return NULL;
         }
         var_type *arg_type = parse_var_type(state);
         if (arg_type == NULL) {
             // TODO error
-            ast_fn_node_free(cur_fn, false);
+            ast_fn_node_free(cur_fn);
             return NULL;
         }
         symbol_table_bucket *b = symbol_table_insert(&cur_fn->type->body.fn->symbols, SYMBOL_PFX(ARG), &arg_name, state->s);
@@ -244,7 +244,7 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
             continue; // another arg
         } else if (ts != TOKEN_STATUS_PFX(SOME)) {
             // TODO error
-            ast_fn_node_free(cur_fn, false);
+            ast_fn_node_free(cur_fn);
             return NULL;
         }
         ts = token_peek_check(state, TOKEN_PFX(RPARENS));
@@ -252,26 +252,26 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
             break; // done with args
         } else if (ts != TOKEN_STATUS_PFX(SOME)) {
             // TODO error
-            ast_fn_node_free(cur_fn, false);
+            ast_fn_node_free(cur_fn);
             return NULL;
         }
     }
     // parse return
     if ((ts = token_next_check(state, TOKEN_PFX(LBRACKET))) != TOKEN_STATUS_PFX(SOME)) {
         // TODO set error
-        ast_fn_node_free(cur_fn, false);
+        ast_fn_node_free(cur_fn);
         return NULL;
     }
     cur_fn->type->body.fn->return_type = parse_var_type(state);
     if ((ts = token_next_check(state, TOKEN_PFX(RBRACKET))) != TOKEN_STATUS_PFX(SOME)) {
         // TODO set error
-        ast_fn_node_free(cur_fn, false);
+        ast_fn_node_free(cur_fn);
         return NULL;
     }
     // parse body
     if ((ps = parse_stmts(state, cur_fn, cur_fn->body_tail)) != PARSER_STATUS_PFX(DONE)) {
         // TODO error
-        ast_fn_node_free(cur_fn, false);
+        ast_fn_node_free(cur_fn);
         return NULL;
     }
     if (parser_mode_pop(state) == PARSER_MODE_PFX(NONE)) {

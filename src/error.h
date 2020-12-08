@@ -45,9 +45,7 @@ inline error *error_init(void) {
     return calloc(1, sizeof(error));
 }
 
-inline void error_free(error *e) {
-    free(e);
-}
+void error_free(error *e);
 
 inline void errno_print_exit(void) {
     int err = errno;

@@ -141,11 +141,10 @@ inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent) {
     return fn;
 }
 
-inline void ast_fn_node_free(ast_fn_node *fn, bool free_parent) {
+inline void ast_fn_node_free(ast_fn_node *fn) {
     var_type_free(fn->type);
     // free links
     ast_node_link_free(fn->body_head);
-    if (free_parent && fn->parent) ast_fn_node_free(fn->parent, free_parent);
     free(fn);
 
 }

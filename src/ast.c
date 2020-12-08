@@ -30,7 +30,7 @@ extern inline ast_node *ast_node_init(ast_type type, ast_data data, const token 
 void ast_node_free(ast_node *node) {
     switch (node->type) {
         case AST_PFX(FN):
-            ast_fn_node_free(node->data.fn, true);
+            ast_fn_node_free(node->data.fn);
             break;
         case AST_PFX(CALL):
             ast_call_node_free(node->data.call);
@@ -63,7 +63,7 @@ extern inline void ast_op_node_free(ast_op_node *op);
 
 extern inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent);
 
-extern inline void ast_fn_node_free(ast_fn_node *fn, bool free_parent);
+extern inline void ast_fn_node_free(ast_fn_node *fn);
 
 extern inline ast_call_node *ast_call_node_init(ast_node *const func, size_t num_args, ast_node *const args[]);
 

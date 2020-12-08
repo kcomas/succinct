@@ -79,11 +79,9 @@ void ast_vec_node_print_json(const ast_vec_node *const vec, const string *const 
 void ast_fn_node_print_json(const ast_fn_node *const fn, const string *const s) {
     printf("{\"type\":");
     var_type_print_json(fn->type);
-    /*
     printf(",\"parent\":");
-    if (fn->parent != NULL) ast_fn_node_print_json(fn->parent, s);
+    if (fn->parent != NULL) printf("\"[struct parent]\"");
     else printf("null");
-    */
     printf(",\"body\":");
     ast_node_link_print_json(fn->body_head, s);
     putchar('}');
