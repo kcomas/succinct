@@ -290,7 +290,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
     parser_status ps;
     bool in_else = false;
     ast_if_cond *cond_node;
-    ast_node_holder *cond_holder;
+    ast_node_holder *cond_holder = ast_node_holder_init();
     for (;;) {
         // parse cond
         cond_node = NULL;
@@ -308,7 +308,6 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
                 // TODO error
                 return NULL;
             }
-            cond_holder = ast_node_holder_init();
             if ((ps = parse_stmt(state, cur_fn, cond_holder)) != PARSER_STATUS_PFX(DONE)) {
                 // TODO error
                 ast_if_node_free(if_node);
@@ -386,6 +385,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
             if_node->conds_tail = if_node->conds_tail->next;
         }
     }
+    ast_node_holder_free(cond_holder);
     return if_node;
 }
 
