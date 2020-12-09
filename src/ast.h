@@ -143,6 +143,7 @@ inline ast_fn_node *ast_fn_node_init(ast_fn_node *parent) {
 
 inline void ast_fn_node_free(ast_fn_node *fn) {
     var_type_free(fn->type);
+    //  parent is freed in the ast
     // free links
     ast_node_link_free(fn->body_head);
     free(fn);

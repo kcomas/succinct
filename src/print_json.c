@@ -15,6 +15,9 @@ static void print_token_string(const token *const t, const string *const s) {
 void token_print_json(const token *const t, const string *const s) {
     printf("{\"type\":\"%s\",\"line\":%lu,\"char\":%lu,\"len\":%lu,\"str\":\"", token_type_string(t->type), t->line_no, t->char_no, token_len(t));
     switch (t->type) {
+        case TOKEN_PFX(UNKNOWN):
+            printf("null");
+            break;
         case TOKEN_PFX(COMMENT):
             print_token_string(t, s);
             break;

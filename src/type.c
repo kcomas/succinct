@@ -125,13 +125,13 @@ extern inline var_type *var_type_fn_init(size_t symbol_table_size);
 
 extern inline void var_type_fn_free(var_type_fn *f);
 
-void var_type_free(var_type *t) {
-    switch (t->header) {
+void var_type_free(var_type *type) {
+    switch (type->header) {
         case VAR_PFX(FN):
-            var_type_fn_free(t->body.fn);
+            var_type_fn_free(type->body.fn);
             break;
         default:
             break;
     }
-    free(t);
+    free(type);
 }

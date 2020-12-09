@@ -64,7 +64,7 @@ typedef struct _symbol_table_bucket {
 
 
 typedef struct {
-    size_t size, symbol_counter; // counter is used
+    size_t size, symbol_counter; // counter is number of items in buckets
     symbol_table_bucket *buckets[]; // list on collision
 } symbol_table;
 

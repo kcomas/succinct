@@ -16,9 +16,7 @@ extern inline error *error_init(void);
 void error_free(error *e) {
     switch (e->type) {
         case ERROR_PFX(PARSER):
-            for (size_t i = 0; i < e->data.parser->stack_head; i++) {
-                token_free(e->data.parser->stack[i].t);
-            }
+            for (size_t i = 0; i < e->data.parser->stack_head; i++) token_free(e->data.parser->stack[i].t);
             free(e->data.parser);
             break;
         default:

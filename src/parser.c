@@ -47,8 +47,8 @@ parser_state *parser_state_init(void) {
 }
 
 void parser_state_free(parser_state *state) {
-    token_free(state->next);
-    token_free(state->peek);
+    if (state->next != NULL) token_free(state->next);
+    if (state->peek != NULL) token_free(state->peek);
     if (state->s) string_free(state->s);
     ast_fn_node_free(state->root_fn);
     error_free(state->e);
@@ -236,6 +236,7 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
         if (++cur_fn->type->body.fn->num_args >= AST_MAX_ARGS) {
             // max args reached
             // TODO error
+            ast_fn_node_free(cur_fn);
             return NULL;
         }
         // check if another arg or done
@@ -276,6 +277,7 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
     }
     if (parser_mode_pop(state) == PARSER_MODE_PFX(NONE)) {
         // TODO error
+        ast_fn_node_free(cur_fn);
         return NULL;
     }
     return cur_fn;
@@ -390,7 +392,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
 parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const head) {
     token_status ts;
     symbol_table_bucket *b = NULL;
-    ast_node *n;
+    ast_node *n = NULL;
     ast_node *value_tmp = NULL;
     ast_node *cur_node = NULL;
     ast_fn_node *fn, *parent;
