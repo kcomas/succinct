@@ -40,8 +40,14 @@ int print_ast(const char *const file) {
     return status;
 }
 
+int print_infer(const char *const file) {
+
+
+    return 0;
+}
+
 int usage(const char *const basefile) {
-    printf("Usage %s [-t(okens) -a(st)] file.sc\n", basefile);
+    printf("Usage %s [-t(okens) -a(st) -i[nfer] file.sc\n", basefile);
     return 1;
 }
 
@@ -53,6 +59,10 @@ int main(int argc, char *argv[]) {
                 return print_tokens(argv[2]);
             case 'a':
                 return print_ast(argv[2]);
+                break;
+            case 'i':
+                return print_infer(argv[2]);
+                break;
             default:
                 break;
         }

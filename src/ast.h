@@ -75,6 +75,7 @@ typedef struct {
 } ast_op_node;
 
 typedef union {
+    int64_t intv;
     symbol_table_bucket *var;
     ast_vec_node *vec;
     ast_fn_node *fn;

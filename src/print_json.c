@@ -152,6 +152,8 @@ void ast_node_print_json(const ast_node *const node, const string *const s) {
             symbol_table_bucket_print_json(node->data.var);
             break;
         case AST_PFX(INT):
+            printf("{\"intv\":%li}", node->data.intv);
+            break;
         case AST_PFX(CHAR):
             printf("null");
             break;

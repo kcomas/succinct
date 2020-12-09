@@ -26,6 +26,7 @@ const char *parser_status_string(parser_status status) {
         "MODE_PUSH_FAIL",
         "MODE_POP_FAIL",
         "VAR_INSERT_FAIL",
+        "INVALID_INT",
         "INVALID_VEC",
         "INVALID_FN",
         "INVALID_CALL",
@@ -396,6 +397,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
     ast_node *n = NULL;
     ast_node *value_tmp = NULL;
     ast_node *cur_node = NULL;
+    int64_t intv;
     ast_fn_node *fn, *parent;
     ast_if_node *if_node;
     ast_vec_node *vec_node;
@@ -437,7 +439,9 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 b = NULL;
                 break;
             case TOKEN_PFX(INT):
-                n = ast_node_init(AST_PFX(INT), (ast_data) {}, state->next);
+                intv = strtol(state->s->buffer + state->next->start_idx, NULL, 10);
+                if (errno == ERANGE) return parser_error(state, PARSER_STATUS_PFX(INVALID_INT));
+                n = ast_node_init(AST_PFX(INT), (ast_data) { .intv = intv }, state->next);
                 break;
             case TOKEN_PFX(CHAR):
                 n = ast_node_init(AST_PFX(CHAR), (ast_data) {}, state->next);

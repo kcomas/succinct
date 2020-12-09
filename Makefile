@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -std=c11 -g -Wall -Wextra
 SRC = ./src
 SOURCES = $(wildcard $(SRC)/*.c)
-OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
+OBJECTS = $(patsubst %.c, %.o, $(SOURCES))
 NAME = sc
 
 all: $(NAME)
