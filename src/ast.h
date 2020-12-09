@@ -123,12 +123,8 @@ inline ast_vec_node *ast_vec_node_init(void) {
 }
 
 inline void ast_vec_node_free(ast_vec_node *v) {
-    ast_node_link *head = v->items_head;
-    while (head != NULL) {
-        ast_node_link *tmp = head;
-        head = head->next;
-        free(tmp);
-    }
+    var_type_free(v->type);
+    ast_node_link_free(v->items_head);
     free(v);
 }
 
