@@ -91,7 +91,7 @@ typedef struct {
     size_t num_args, num_locals;
     var_type *return_type; // added on parse
     symbol_table* symbols;
-    // TODO types of each arg
+    symbol_table_bucket *args[];// types of each arg
 } var_type_fn; // module has void return type and symbol table
 
 typedef union {
@@ -122,7 +122,7 @@ inline var_type *var_type_init(var_type_header header, var_type_body body) {
 void var_type_free(var_type *t);
 
 inline var_type *var_type_fn_init(size_t symbol_table_size) {
-    var_type_fn *fn = calloc(1, sizeof(var_type_fn));
+    var_type_fn *fn = calloc(1, sizeof(var_type_fn) + sizeof(symbol_table_bucket*) * AST_MAX_ARGS);
     fn->symbols = symbol_table_init(symbol_table_size);
     return var_type_init(VAR_PFX(FN), (var_type_body) { .fn = fn });
 }
@@ -130,5 +130,6 @@ inline var_type *var_type_fn_init(size_t symbol_table_size) {
 inline void var_type_fn_free(var_type_fn *fn) {
     var_type_free(fn->return_type);
     symbol_table_free(fn->symbols);
+    // args are freed in symbol table
     free(fn);
 }

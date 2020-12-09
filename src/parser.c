@@ -232,8 +232,9 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
             return NULL;
         }
         b->type = arg_type;
+        cur_fn->type->body.fn->args[cur_fn->type->body.fn->num_args++] = b;
         // inc arg count
-        if (++cur_fn->type->body.fn->num_args >= AST_MAX_ARGS) {
+        if (cur_fn->type->body.fn->num_args >= AST_MAX_ARGS) {
             // max args reached
             // TODO error
             ast_fn_node_free(cur_fn);
