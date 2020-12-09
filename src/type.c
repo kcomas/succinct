@@ -49,7 +49,6 @@ void symbol_table_free(symbol_table *s) {
         while (b != NULL) {
             symbol_table_bucket *tmp = b;
             b = b->next;
-            var_type_free(tmp->type);
             free(tmp);
         }
     }
@@ -77,7 +76,6 @@ static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t sym
     b->table_type = table_type;
     b->symbol_idx = symbol_counter;
     b->size_len = size_len;
-    b->type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
     memcpy(b->symbol, s->buffer + t->start_idx, token_len(t));
     return b;
 }
@@ -125,13 +123,14 @@ extern inline var_type *var_type_fn_init(size_t symbol_table_size);
 
 extern inline void var_type_fn_free(var_type_fn *f);
 
-void var_type_free(var_type *type) {
-    switch (type->header) {
+void var_type_free(var_type *t) {
+    if (t == NULL) return;
+    switch (t->header) {
         case VAR_PFX(FN):
-            var_type_fn_free(type->body.fn);
+            var_type_fn_free(t->body.fn);
             break;
         default:
             break;
     }
-    free(type);
+    free(t);
 }

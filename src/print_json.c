@@ -55,18 +55,35 @@ void symbol_table_print_json(const symbol_table *const table) {
 }
 
 void var_type_print_json(const var_type *const t) {
-    printf("{\"header\":\"%s\",\"body\":{", var_type_header_string(t->header));
+    if (t == NULL) {
+        printf("null");
+        return;
+    }
+    printf("{\"header\":\"%s\",\"body\":", var_type_header_string(t->header));
     switch (t->header) {
         case VAR_PFX(FN):
-            printf("\"num_args\":%lu,\"num_locals\":%lu,\"return_type\":", t->body.fn->num_args, t->body.fn->num_locals);
+            printf("{\"num_args\":%lu,\"num_locals\":%lu,\"return_type\":", t->body.fn->num_args, t->body.fn->num_locals);
             var_type_print_json(t->body.fn->return_type);
             printf(",\"symbol_table\":");
             symbol_table_print_json(t->body.fn->symbols);
+            putchar('}');
             break;
         default:
+            printf("null");
             break;
     }
-    printf("}}");
+    printf("}");
+}
+
+void ast_node_link_print_json(ast_node_link *head, const string *const s) {
+    // print all links
+    putchar('[');
+    while (head != NULL) {
+        if (head->node) ast_node_print_json(head->node, s);
+        if (head->next != NULL && head->next->node) putchar(',');
+        head = head->next;
+    }
+    putchar(']');
 }
 
 void ast_vec_node_print_json(const ast_vec_node *const vec, const string *const s) {
@@ -161,17 +178,6 @@ void ast_node_print_json(const ast_node *const node, const string *const s) {
     printf("\"token\":");
     token_print_json(node->t, s);
     putchar('}');
-}
-
-void ast_node_link_print_json(ast_node_link *head, const string *const s) {
-    // print all links
-    putchar('[');
-    while (head != NULL) {
-        if (head->node) ast_node_print_json(head->node, s);
-        if (head->next != NULL && head->next->node) putchar(',');
-        head = head->next;
-    }
-    putchar(']');
 }
 
 void error_print_json(const error *const e, const string *const s) {

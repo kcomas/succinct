@@ -58,10 +58,9 @@ typedef struct _symbol_table_bucket {
         size_t stack, key; // absolute index of the stack, if hash with fixed keys get index of key
     } idx;
     struct _symbol_table_bucket *next;
-    var_type *type;
+    var_type *type; // type is copied on infer and deleted by its ast owner
     char symbol[];
 } symbol_table_bucket;
-
 
 typedef struct {
     size_t size, symbol_counter; // counter is number of items in buckets
@@ -90,8 +89,9 @@ inline symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_t
 
 typedef struct {
     size_t num_args, num_locals;
-    var_type *return_type;
+    var_type *return_type; // added on parse
     symbol_table* symbols;
+    // TODO types of each arg
 } var_type_fn; // module has void return type and symbol table
 
 typedef union {
@@ -123,7 +123,6 @@ void var_type_free(var_type *t);
 
 inline var_type *var_type_fn_init(size_t symbol_table_size) {
     var_type_fn *fn = calloc(1, sizeof(var_type_fn));
-    fn->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
     fn->symbols = symbol_table_init(symbol_table_size);
     return var_type_init(VAR_PFX(FN), (var_type_body) { .fn = fn });
 }

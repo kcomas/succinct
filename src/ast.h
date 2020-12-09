@@ -64,13 +64,13 @@ typedef struct _ast_if_cond {
 } ast_if_cond;
 
 typedef struct {
-    var_type *return_type; // all bodies must have same type if if is being assigned
+    var_type *return_type; // added on infer, all bodies must have same type if if is being assigned
     ast_if_cond *conds_head, *conds_tail;
     ast_node_link *else_head, *else_tail;
 } ast_if_node;
 
 typedef struct {
-    var_type *return_type;
+    var_type *return_type; // added on infer
     ast_node *left, *right;
 } ast_op_node;
 
@@ -166,7 +166,6 @@ inline void ast_call_node_free(ast_call_node *c) {
 
 inline ast_if_node *ast_if_node_init(void) {
     ast_if_node *if_node = calloc(1, sizeof(ast_if_node));
-    if_node->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
     return if_node;
 }
 
@@ -181,7 +180,6 @@ inline ast_if_cond *ast_if_cond_init(void) {
 
 inline ast_op_node *ast_op_node_init(void) {
     ast_op_node *op = calloc(1, sizeof(ast_op_node));
-    op->return_type = var_type_init(VAR_PFX(UNKNOWN), (var_type_body) {});
     return op;
 }
 

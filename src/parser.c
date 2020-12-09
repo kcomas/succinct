@@ -27,6 +27,7 @@ const char *parser_status_string(parser_status status) {
         "MODE_POP_FAIL",
         "VAR_INSERT_FAIL",
         "INVALID_VEC",
+        "INVALID_FN",
         "INVALID_CALL",
         "INVALID_IF",
         "INVALID_TOKEN_SEQUENCE",
@@ -232,7 +233,6 @@ static ast_fn_node *parse_fn(parser_state *const state, ast_fn_node *const paren
         }
         b->type = arg_type;
         // inc arg count
-        cur_fn->type->body.fn->num_args++;
         if (++cur_fn->type->body.fn->num_args >= AST_MAX_ARGS) {
             // max args reached
             // TODO error
@@ -446,6 +446,7 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
                     if ((fn = parse_fn(state, cur_fn)) == NULL) {
                         // TODO error
+                        return parser_error(state, PARSER_STATUS_PFX(INVALID_FN));
                     }
                     n = ast_node_init(AST_PFX(FN), (ast_data) { .fn = fn }, state->next);
                 } else if (ts != TOKEN_STATUS_PFX(SOME)) {
