@@ -4,6 +4,7 @@
 #include "string.h"
 #include "error.h"
 #include "type.h"
+#include "utf8.h"
 #include "def.h"
 #include "token.h"
 
@@ -75,8 +76,9 @@ typedef struct {
 } ast_op_node;
 
 typedef union {
-    int64_t intv;
     symbol_table_bucket *var;
+    int64_t intv;
+    utf8 cv;
     ast_vec_node *vec;
     ast_fn_node *fn;
     ast_call_node *call;

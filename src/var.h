@@ -6,6 +6,7 @@
 #include <time.h>
 #include "type.h"
 #include "string.h"
+#include "utf8.h"
 #include "hash.h"
 
 typedef union {
@@ -17,7 +18,7 @@ typedef union {
     int16_t i16;
     int32_t i32;
     int64_t i64;
-    char chr[4];
+    utf8 c;
     string *str;
     hash *h;
     int fd;

@@ -132,6 +132,7 @@ static token_status parse_string(token* const t, const string *const s) {
     }
     next_char_update(t);
     // char if 3 chars for char of 4 chars for escape char
+    // TODO utf8 char
     if (token_len(t) == 3 || (token_len(t) == 4 && s->buffer[t->start_idx + 1] == '\\')) t->type = TOKEN_PFX(CHAR);
     else t->type = TOKEN_PFX(STRING);
     return TOKEN_STATUS_PFX(SOME);

@@ -155,7 +155,17 @@ void ast_node_print_json(const ast_node *const node, const string *const s) {
             printf("{\"intv\":%li}", node->data.intv);
             break;
         case AST_PFX(CHAR):
-            printf("null");
+            // TODO utf8 char
+            printf("{\"cv\":\"");
+            switch (node->data.cv.c[0]) {
+                case '\n':
+                    printf("\\n");
+                    break;
+                default:
+                    putchar(node->data.cv.c[0]);
+                    break;
+            }
+            printf("\"}");
             break;
         case AST_PFX(VEC):
             ast_vec_node_print_json(node->data.vec, s);
