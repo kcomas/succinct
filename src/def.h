@@ -24,3 +24,7 @@
 #ifndef AST_MAX_ARGS
     #define AST_MAX_ARGS 4
 #endif
+
+#ifndef ERROR_INFER_MAX_STACK_SIZE
+    #define ERROR_INFER_MAX_STACK_SIZE 20
+#endif

@@ -2,7 +2,6 @@
 #pragma once
 
 #include "string.h"
-#include "error.h"
 #include "type.h"
 #include "utf8.h"
 #include "def.h"

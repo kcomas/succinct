@@ -51,8 +51,8 @@ parser_state *parser_state_init(void) {
 void parser_state_free(parser_state *state) {
     if (state->next != NULL) token_free(state->next);
     if (state->peek != NULL) token_free(state->peek);
-    if (state->s) string_free(state->s);
-    ast_fn_node_free(state->root_fn);
+    if (state->s != NULL) string_free(state->s);
+    if (state->root_fn != NULL) ast_fn_node_free(state->root_fn);
     error_free(state->e);
     free(state);
 }
@@ -84,7 +84,7 @@ static token_status token_peek_check(parser_state *const state, token_type type)
 }
 
 static parser_status wire_final_value(ast_node *const value_tmp, ast_node *const cur_node, parser_status ret_type) {
-    if (cur_node != NULL && is_op(cur_node) && value_tmp != NULL) {
+    if (cur_node != NULL && is_op(cur_node) == true && value_tmp != NULL) {
         if (cur_node->data.op->right == NULL) {
             cur_node->data.op->right = value_tmp;
         } else {
@@ -432,7 +432,8 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                     n = ast_node_init(AST_PFX(VAR), (ast_data) { .var = b }, state->next);
                 } else {
                     // check if fn call
-                    if ((n = parse_check_call(state, cur_fn, ast_node_init(AST_PFX(VAR), (ast_data) { .var = b }, state->next))) == NULL) return parser_error(state, PARSER_STATUS_PFX(INVALID_CALL));
+                    if ((n = parse_check_call(state, cur_fn, ast_node_init(AST_PFX(VAR), (ast_data) { .var = b }, state->next))) == NULL)
+                        return parser_error(state, PARSER_STATUS_PFX(INVALID_CALL));
                 }
                 b = NULL;
                 break;
@@ -524,16 +525,16 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 break;
         }
         if (n == NULL) break;
-        if (is_value(n) && cur_node == NULL) {
+        if (is_value(n) == true && cur_node == NULL) {
             head->node = n;
             cur_node = n;
-        } else if (is_op(n) && (head->node == NULL || is_value(head->node))) {
+        } else if (is_op(n) == true && (head->node == NULL || is_value(head->node) == true)) {
             n->data.op->left = cur_node;
             head->node = n;
             cur_node = n;
-        } else if (is_value(n) && value_tmp == NULL) {
+        } else if (is_value(n) == true && value_tmp == NULL) {
             value_tmp = n;
-        } else if (is_op(cur_node) && is_op(n)) {
+        } else if (is_op(cur_node) == true && is_op(n) == true) {
             n->data.op->left = value_tmp;
             value_tmp = NULL;
             cur_node->data.op->right = n;

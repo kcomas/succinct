@@ -37,6 +37,10 @@ typedef enum {
 
 const char *var_type_header_string(var_type_header header);
 
+inline bool var_type_is_primative(var_type_header header) {
+    return header >= VAR_PFX(VOID) && header <= VAR_PFX(STRING);
+}
+
 typedef struct _var_type var_type;
 
 #define SYMBOL_PFX(NAME) SYMBOL_##NAME

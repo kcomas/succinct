@@ -1,6 +1,7 @@
 
 #include "parser.h"
 #include "print_json.h"
+#include "infer.h"
 
 int print_tokens(const char *const file) {
     int fd = file_open_r(file);
@@ -41,8 +42,14 @@ int print_ast(const char *const file) {
 }
 
 int print_infer(const char *const file) {
-
-
+    parser_state *state = parser_state_init();
+    parser_status ps = parse_module(state, file);
+    if (ps != PARSER_STATUS_PFX(DONE) || ps != PARSER_STATUS_PFX(NONE)) {
+        error_print_json(state->e, state->s);
+        parser_state_free(state);
+        return ps;
+    }
+    // TODO infer
     return 0;
 }
 

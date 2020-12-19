@@ -41,6 +41,8 @@ const char *symbol_table_type_string(symbol_table_type type) {
     return type > SYMBOL_PFX(_SYMBOL_TYPE) && type < SYMBOL_PFX(_END_SYMBOL_TYPE) ? types[type] : "SYMBOL_TABLE_TYPE_NOT_FOUND";
 }
 
+extern inline bool var_type_is_primative(var_type_header header);
+
 extern inline symbol_table *symbol_table_init(size_t size);
 
 void symbol_table_free(symbol_table *s) {

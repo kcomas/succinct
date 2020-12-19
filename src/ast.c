@@ -45,7 +45,7 @@ void ast_node_free(ast_node *node) {
             ast_vec_node_free(node->data.vec);
             break;
         default:
-            if (is_op(node)) ast_op_node_free(node->data.op);
+            if (is_op(node) == true) ast_op_node_free(node->data.op);
             break;
     }
     token_free(node->t);
