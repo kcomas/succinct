@@ -11,7 +11,6 @@
 
 typedef enum {
     VAR_PFX(_VAR_TYPE_HEADER),
-    VAR_PFX(UNKNOWN),
     VAR_PFX(VOID),
     VAR_PFX(U8),
     VAR_PFX(U16),
@@ -124,6 +123,8 @@ inline var_type *var_type_init(var_type_header header, var_type_body body) {
 }
 
 void var_type_free(var_type *t);
+
+bool var_type_equal(const var_type *const left, const var_type *const right);
 
 inline var_type *var_type_fn_init(size_t symbol_table_size) {
     var_type_fn *fn = calloc(1, sizeof(var_type_fn) + sizeof(symbol_table_bucket*) * AST_MAX_ARGS);

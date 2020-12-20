@@ -4,7 +4,6 @@
 const char *var_type_header_string(var_type_header header) {
     static const char *types[] = {
         "_VAR_TYPE_HEADER",
-        "UNKNOWN",
         "VOID",
         "U8",
         "U16",
@@ -122,10 +121,6 @@ extern inline symbol_table_bucket *symbol_table_findsert(symbol_table **table, s
 
 extern inline var_type *var_type_init(var_type_header header, var_type_body body);
 
-extern inline var_type *var_type_fn_init(size_t symbol_table_size);
-
-extern inline void var_type_fn_free(var_type_fn *f);
-
 void var_type_free(var_type *t) {
     if (t == NULL) return;
     switch (t->header) {
@@ -137,3 +132,19 @@ void var_type_free(var_type *t) {
     }
     free(t);
 }
+
+
+bool var_type_equal(const var_type *const left, const var_type *const right) {
+    if (left->header != right->header) return false;
+    switch (left->header) {
+        case VAR_PFX(FN):
+            return left->body.fn == right->body.fn;
+        default:
+            break;
+    }
+    return true;
+}
+
+extern inline var_type *var_type_fn_init(size_t symbol_table_size);
+
+extern inline void var_type_fn_free(var_type_fn *f);

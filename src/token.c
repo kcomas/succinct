@@ -164,20 +164,29 @@ token_status token_next(token *const t, const string *const s) {
     if (isdigit(c)) return parse_num(t, s);
     if (c == '"') return parse_string(t, s);
     switch (c) {
-        case '{': return found_token(t, TOKEN_PFX(LBRACE));
-        case '}': return found_token(t, TOKEN_PFX(RBRACE));
-        case '[': return found_token(t, TOKEN_PFX(LBRACKET));
-        case ']': return found_token(t, TOKEN_PFX(RBRACKET));
-        case '(': return found_token(t, TOKEN_PFX(LPARENS));
-        case ')': return found_token(t, TOKEN_PFX(RPARENS));
+        case '{':
+            return found_token(t, TOKEN_PFX(LBRACE));
+        case '}':
+            return found_token(t, TOKEN_PFX(RBRACE));
+        case '[':
+            return found_token(t, TOKEN_PFX(LBRACKET));
+        case ']':
+            return found_token(t, TOKEN_PFX(RBRACKET));
+        case '(':
+            return found_token(t, TOKEN_PFX(LPARENS));
+        case ')':
+            return found_token(t, TOKEN_PFX(RPARENS));
         case ':':
             if (char_lookup_one(t, s, ':'))
                 return found_token(t, TOKEN_PFX(DEFINE));
             else
                 return found_token(t, TOKEN_PFX(ASSIGN));
-        case '+': return found_token(t, TOKEN_PFX(ADD));
-        case '-': return found_token(t, TOKEN_PFX(SUB));
-        case '*': return found_token(t, TOKEN_PFX(MUL));
+        case '+':
+            return found_token(t, TOKEN_PFX(ADD));
+        case '-':
+            return found_token(t, TOKEN_PFX(SUB));
+        case '*':
+            return found_token(t, TOKEN_PFX(MUL));
         case '/':
             if (char_lookup_one(t, s, '/')) // comment
                 return parse_comment(t, s);
@@ -186,9 +195,12 @@ token_status token_next(token *const t, const string *const s) {
         case '\n':
                   newline_update(t);
                   return found_token(t, TOKEN_PFX(NEWLINE));
-        case ';': return found_token(t, TOKEN_PFX(SEPRATOR));
-        case '?': return found_token(t, TOKEN_PFX(COND));
-        case '=': return found_token(t, TOKEN_PFX(EQUAL));
+        case ';':
+            return found_token(t, TOKEN_PFX(SEPRATOR));
+        case '?':
+            return found_token(t, TOKEN_PFX(COND));
+        case '=':
+            return found_token(t, TOKEN_PFX(EQUAL));
         case '<':
             if (char_lookup_one(t, s, '='))
                 return found_token(t, TOKEN_PFX(LESSEQUAL));
@@ -196,7 +208,8 @@ token_status token_next(token *const t, const string *const s) {
                 return found_token(t, TOKEN_PFX(WRITE));
             else
                 return found_token(t, TOKEN_PFX(LESS));
-        case '&': return found_token(t, TOKEN_PFX(AND));
+        case '&':
+            return found_token(t, TOKEN_PFX(AND));
     }
     return TOKEN_STATUS_PFX(NONE);
 }

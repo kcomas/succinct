@@ -27,11 +27,17 @@ inline void infer_state_free(infer_state *state) {
 typedef enum {
     INFER_STATUS_PFX(OK),
     INFER_STATUS_PFX(INVALID_NODE),
+    INFER_STATUS_PFX(INVALID_ASSGIN_LEFT_SIDE),
+    INFER_STATUS_PFX(INVALID_LEFT_SIDE),
+    INFER_STATUS_PFX(INVALID_RIGHT_SIDE),
+    INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL)
 } infer_status;
 
 inline infer_status infer_error(infer_state *const state, infer_status status, ast_node *const node) {
     error_infer(state->e, status, node);
     return status;
 }
+
+infer_status infer_node(infer_state *const state, ast_node *const node);
 
 infer_status infer(infer_state *const state);
