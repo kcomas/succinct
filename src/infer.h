@@ -30,7 +30,8 @@ typedef enum {
     INFER_STATUS_PFX(INVALID_ASSGIN_LEFT_SIDE),
     INFER_STATUS_PFX(INVALID_LEFT_SIDE),
     INFER_STATUS_PFX(INVALID_RIGHT_SIDE),
-    INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL)
+    INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL),
+    INFER_STATUS_PFX(INVALID_TYPE_FOR_OP),
 } infer_status;
 
 inline infer_status infer_error(infer_state *const state, infer_status status, ast_node *const node) {

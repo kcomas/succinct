@@ -11,6 +11,7 @@
 
 typedef enum {
     VAR_PFX(_VAR_TYPE_HEADER),
+    VAR_PFX(UNKNOWN),
     VAR_PFX(VOID),
     VAR_PFX(U8),
     VAR_PFX(U16),
@@ -24,7 +25,8 @@ typedef enum {
     VAR_PFX(F64),
     VAR_PFX(CHAR),
     VAR_PFX(STRING),
-    VAR_PFX(DATETIME),
+    VAR_PFX(DATE),
+    VAR_PFX(TIME),
     VAR_PFX(VEC),
     VAR_PFX(HASH),
     VAR_PFX(FN),
@@ -37,7 +39,23 @@ typedef enum {
 const char *var_type_header_string(var_type_header header);
 
 inline bool var_type_is_primative(var_type_header header) {
-    return header >= VAR_PFX(VOID) && header <= VAR_PFX(STRING);
+    return header >= VAR_PFX(VOID) && header <= VAR_PFX(TIME);
+}
+
+inline bool var_type_is_unsgined(var_type_header header) {
+    return header >= VAR_PFX(U8) && header <= VAR_PFX(U64);
+}
+
+inline bool var_type_is_signed(var_type_header header) {
+    return header >= VAR_PFX(I8) && header <= VAR_PFX(I64);
+}
+
+inline bool var_type_is_float(var_type_header header) {
+    return header == VAR_PFX(F32) || header == VAR_PFX(F64);
+}
+
+inline bool var_type_is_number(var_type_header header) {
+    return var_type_is_unsgined(header) || var_type_is_signed(header) || var_type_is_float(header);
 }
 
 typedef struct _var_type var_type;
@@ -123,6 +141,8 @@ inline var_type *var_type_init(var_type_header header, var_type_body body) {
 }
 
 void var_type_free(var_type *t);
+
+void var_type_copy(var_type *const dest, const var_type *const src);
 
 bool var_type_equal(const var_type *const left, const var_type *const right);
 

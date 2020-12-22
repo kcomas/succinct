@@ -12,7 +12,6 @@
 typedef enum {
     // Data Types
     AST_PFX(_VALUE),
-    AST_PFX(UNKNOWN),
     AST_PFX(VAR),
     AST_PFX(INT),
     AST_PFX(CHAR),

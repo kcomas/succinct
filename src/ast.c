@@ -4,7 +4,6 @@
 const char *ast_type_string(ast_type type) {
     static const char *types[] = {
         "_VALUE",
-        "UNKNOWN",
         "VAR",
         "INT",
         "CHAR",

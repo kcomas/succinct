@@ -4,6 +4,7 @@
 const char *var_type_header_string(var_type_header header) {
     static const char *types[] = {
         "_VAR_TYPE_HEADER",
+        "UNKNOWN",
         "VOID",
         "U8",
         "U16",
@@ -17,7 +18,8 @@ const char *var_type_header_string(var_type_header header) {
         "F64",
         "CHAR",
         "STRING",
-        "DATETIME",
+        "DATE",
+        "TIME",
         "VEC",
         "HASH",
         "FN",
@@ -29,6 +31,16 @@ const char *var_type_header_string(var_type_header header) {
     return header > VAR_PFX(_VAR_TYPE_HEADER) && header < VAR_PFX(_END_VAR_TYPE_HEADER) ? types[header] : "VAR_TYPE_HEADER_NOT_FOUND";
 }
 
+extern inline bool var_type_is_primative(var_type_header header);
+
+extern inline bool var_type_is_unsgined(var_type_header header);
+
+extern inline bool var_type_is_signed(var_type_header header);
+
+extern inline bool var_type_is_float(var_type_header header);
+
+extern inline bool var_type_is_number(var_type_header header);
+
 const char *symbol_table_type_string(symbol_table_type type) {
     static const char *types[] = {
         "_SYMBOL_TYPE",
@@ -39,8 +51,6 @@ const char *symbol_table_type_string(symbol_table_type type) {
     };
     return type > SYMBOL_PFX(_SYMBOL_TYPE) && type < SYMBOL_PFX(_END_SYMBOL_TYPE) ? types[type] : "SYMBOL_TABLE_TYPE_NOT_FOUND";
 }
-
-extern inline bool var_type_is_primative(var_type_header header);
 
 extern inline symbol_table *symbol_table_init(size_t size);
 
@@ -133,6 +143,16 @@ void var_type_free(var_type *t) {
     free(t);
 }
 
+void var_type_copy(var_type *const dest, const var_type *const src) {
+    dest->header = src->header;
+    switch (src->header) {
+        case VAR_PFX(FN):
+            dest->body.fn = src->body.fn;
+            break;
+        default:
+            break;
+    }
+}
 
 bool var_type_equal(const var_type *const left, const var_type *const right) {
     if (left->header != right->header) return false;
