@@ -30,6 +30,12 @@ static bool get_type_from_node(const ast_node *const node, var_type *const type)
     return true;
 }
 
+static var_type *var_type_init_from_node(const ast_node *const node) {
+    var_type src;
+    if (get_type_from_node(node, &src) == false) return NULL;
+    return var_type_init(src.header, src.body);
+}
+
 static bool node_equal_types(const ast_node *const left_node, const ast_node *const right_node) {
     // get the var type for each node
     var_type left, right;
@@ -50,39 +56,62 @@ static infer_status infer_fn(infer_state *const state, ast_fn_node *const fn) {
     return INFER_STATUS_PFX(OK);
 }
 
+static infer_status infer_node_with_equal_sides(infer_state *const state, ast_node *const node, bool (*type_check_fn)(var_type_header) ) {
+    infer_status is;
+    if (node->data.op->left == NULL) return infer_error(state, INFER_STATUS_PFX(INVALID_LEFT_SIDE), node);
+    if ((is = infer_node(state, node->data.op->left)) != INFER_STATUS_PFX(OK))
+        return infer_error(state, is, node);
+    if (node->data.op->right == NULL) return infer_error(state, INFER_STATUS_PFX(INVALID_RIGHT_SIDE), node);
+    if ((is = infer_node(state, node->data.op->right)) != INFER_STATUS_PFX(OK))
+        return infer_error(state, is, node);
+    // check types are equal
+    if (node_equal_types(node->data.op->left, node->data.op->right) == false)
+        return infer_error(state, INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL), node);
+    // set the type of the node
+    node->data.op->return_type = var_type_init_from_node(node->data.op->left);
+    // check the allowed types for op
+    if (type_check_fn(node->data.op->return_type->header) == false)
+        return infer_error(state, INFER_STATUS_PFX(INVALID_TYPE_FOR_OP), node);
+    return INFER_STATUS_PFX(OK);
+}
+
+static bool var_type_number_cmp(var_type_header header) {
+    return var_type_is_number(header);
+}
+
 infer_status infer_node(infer_state *const state, ast_node *const node) {
     infer_status is;
-    var_type new_type;
     switch (node->type) {
+        case AST_PFX(VAR):
+            if (node->data.var->type == NULL) return infer_error(state, INFER_STATUS_PFX(VAR_TYPE_NOT_FOUND), node);
+            return INFER_STATUS_PFX(OK);
+        case AST_PFX(INT):
+        case AST_PFX(CHAR):
+            return INFER_STATUS_PFX(OK);
         case AST_PFX(FN):
             return infer_fn(state, node->data.fn);
         case AST_PFX(ASSIGN):
             // left must be a var or item in indexable
-            if (node->data.op->left->type != AST_PFX(VAR))
-                return infer_error(state, INFER_STATUS_PFX(INVALID_ASSGIN_LEFT_SIDE), node);
-            // infer right side
-            if ((is = infer_node(state, node->data.op->right)) != INFER_STATUS_PFX(OK))
-                return infer_error(state, is, node);
-            if (node->data.op->left->data.var->type == NULL) {
-                // TODO copy type
+            if (node->data.op->left->type == AST_PFX(VAR)) {
+                if ((is = infer_node(state, node->data.op->right)) != INFER_STATUS_PFX(OK))
+                    return infer_error(state, is, node);
+                if (node->data.op->left->data.var->type == NULL)
+                    node->data.op->left->data.var->type = var_type_init_from_node(node->data.op->right); // copy type
+                else if (node_equal_types(node->data.op->left, node->data.op->right) == false)
+                    return infer_error(state, INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL), node); // types must be equal
             } else {
-                // TODO check type of new assign must be same
+                return infer_error(state, INFER_STATUS_PFX(INVALID_ASSGIN_LEFT_SIDE), node);
             }
             return INFER_STATUS_PFX(OK);
         case AST_PFX(ADD):
         case AST_PFX(SUB):
-            if (node->data.op->left == NULL) return infer_error(state, INFER_STATUS_PFX(INVALID_LEFT_SIDE), node);
-            if ((is = infer_node(state, node->data.op->left)) != INFER_STATUS_PFX(OK))
-                return infer_error(state, is, node);
-            if (node->data.op->right == NULL) return infer_error(state, INFER_STATUS_PFX(INVALID_RIGHT_SIDE), node);
-            if ((is = infer_node(state, node->data.op->right)) != INFER_STATUS_PFX(OK))
-                return infer_error(state, is, node);
-            // check types are equal
-            if (node_equal_types(node->data.op->left, node->data.op->right) == false)
-                return infer_error(state, INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL), node);
-            // check the allowed types for op
-            // set the type of the node
-            return INFER_STATUS_PFX(OK);
+            return infer_node_with_equal_sides(state, node, var_type_number_cmp);
+        case AST_PFX(WRITE):
+            // TODO
+            break;
+        case AST_PFX(EQUAL):
+        case AST_PFX(LESSEQUAL):
+            return infer_node_with_equal_sides(state, node, var_type_number_cmp);
         default:
             break;
     }
