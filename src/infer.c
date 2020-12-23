@@ -88,6 +88,9 @@ infer_status infer_node(infer_state *const state, ast_node *const node) {
         case AST_PFX(INT):
         case AST_PFX(CHAR):
             return INFER_STATUS_PFX(OK);
+        case AST_PFX(VEC):
+            // TODO
+            break;
         case AST_PFX(FN):
             return infer_fn(state, node->data.fn);
         case AST_PFX(ASSIGN):

@@ -24,6 +24,7 @@ const char *token_type_string(token_type type) {
         "MUL",
         "DIV",
         "WRITE",
+        "AT",
         "NEWLINE",
         "SEPRATOR",
         "COND",
@@ -208,6 +209,8 @@ token_status token_next(token *const t, const string *const s) {
                 return found_token(t, TOKEN_PFX(WRITE));
             else
                 return found_token(t, TOKEN_PFX(LESS));
+        case '@':
+            return found_token(t, TOKEN_PFX(AT));
         case '&':
             return found_token(t, TOKEN_PFX(AND));
     }

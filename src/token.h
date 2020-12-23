@@ -35,6 +35,7 @@ typedef enum {
     TOKEN_PFX(MUL), // *
     TOKEN_PFX(DIV), // /
     TOKEN_PFX(WRITE), // <&
+    TOKEN_PFX(AT), // @
     // Control Flow
     TOKEN_PFX(NEWLINE), // \n
     TOKEN_PFX(SEPRATOR), // ;

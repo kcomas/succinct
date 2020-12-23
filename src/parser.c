@@ -474,11 +474,6 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 if (parser_mode_get(state) == PARSER_MODE_PFX(IF_BODY) || parser_mode_get(state) == PARSER_MODE_PFX(FN))
                     return wire_final_value(value_tmp, cur_node, PARSER_STATUS_PFX(DONE));
                 break;
-            case TOKEN_PFX(LBRACKET):
-                if ((vec_node = parser_vec(state, cur_fn)) == NULL)
-                    return parser_error(state, PARSER_STATUS_PFX(INVALID_VEC));
-                n = ast_node_init(AST_PFX(VEC), (ast_data) { .vec = vec_node }, state->next);
-                break;
             case TOKEN_PFX(RBRACKET):
                 if (parser_mode_get(state) == PARSER_MODE_PFX(VEC_BODY))
                     return wire_final_value(value_tmp, cur_node, PARSER_STATUS_PFX(DONE));
@@ -502,6 +497,17 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
             case TOKEN_PFX(WRITE):
                 // TODO fn call
                 n = make_op(state, AST_PFX(WRITE));
+                break;
+            case TOKEN_PFX(AT):
+                ts = token_peek_check(state, TOKEN_PFX(LBRACKET));
+                if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
+                    // vec
+                    if ((vec_node = parser_vec(state, cur_fn)) == NULL)
+                        return parser_error(state, PARSER_STATUS_PFX(INVALID_VEC));
+                    n = ast_node_init(AST_PFX(VEC), (ast_data) { .vec = vec_node }, state->next);
+                } else if (ts != TOKEN_STATUS_PFX(SOME)) {
+                    // TODO error
+                }
                 break;
             case TOKEN_PFX(EQUAL):
                 // TODO fn call
