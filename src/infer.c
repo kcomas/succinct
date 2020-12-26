@@ -5,6 +5,25 @@ extern inline infer_state *infer_state_init(parser_state *const ps);
 
 extern inline void infer_state_free(infer_state *state);
 
+const char *infer_status_string(infer_status status) {
+    static const char *statuses[] = {
+        "_START_INFER",
+        "OK",
+        "INVALID_NODE",
+        "VAR_TYPE_NOT_FOUND",
+        "INVALID_ASSIGN_LEFT_SIDE",
+        "INVALID_LEFT_SIDE",
+        "INVALID_RIGHT_SIDE",
+        "NODE_TYPES_NOT_EQUAL",
+        "INVALID_TYPE_FOR_OP",
+        "CANNOT_GET_TYPE_FROM_NODE",
+        "CANNOT_GET_CALL_TYPE",
+        "CALL_NOT_ON_FN",
+        "_END_INFER"
+    };
+    return status > INFER_STATUS_PFX(_START_INFER) && status < INFER_STATUS_PFX(_END_INFER) ? statuses[status]: "INFER_STATUS_NOT_FOUND";
+}
+
 extern inline infer_status infer_error(infer_state *const state, infer_status status, ast_node *const node);
 
 static bool get_type_from_node(const ast_node *const node, var_type *const type) {
@@ -135,7 +154,7 @@ infer_status infer_node(infer_state *const state, ast_node *const node) {
         case AST_PFX(ASSIGN):
             // left must be a var
             if (node->data.op->left->type != AST_PFX(VAR))
-                return infer_error(state, INFER_STATUS_PFX(INVALID_ASSGIN_LEFT_SIDE), node);
+                return infer_error(state, INFER_STATUS_PFX(INVALID_ASSIGN_LEFT_SIDE), node);
             if ((is = infer_node(state, node->data.op->right)) != INFER_STATUS_PFX(OK))
                 return infer_error(state, is, node);
             if (node->data.op->left->data.var->type == NULL)

@@ -51,6 +51,7 @@ int print_infer(const char *const file) {
     }
     infer_state *istate = infer_state_init(pstate);
     infer_status is = infer(istate);
+    if (is != INFER_STATUS_PFX(OK)) error_print_json(istate->e, istate->p->s);
     infer_state_free(istate);
     return is;
 }

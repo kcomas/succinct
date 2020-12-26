@@ -214,7 +214,17 @@ void error_print_json(const error *const e, const string *const s) {
                 putchar('}');
                 if (stack_head + 1 < e->data.parser->stack_head) putchar(',');
             }
-            printf("]");
+            putchar(']');
+            break;
+        case ERROR_PFX(INFER):
+            printf("\"stack_trace\":[");
+            for (size_t stack_head = 0; stack_head < e->data.infer->stack_head; stack_head++) {
+                printf("{\"status\":\"%s\",\"ast_node\":", infer_status_string(e->data.infer->stack[stack_head].status));
+                ast_node_print_json(e->data.infer->stack[stack_head].node, s);
+                putchar('}');
+                if (stack_head + 1 < e->data.infer->stack_head) putchar(',');
+            }
+            putchar(']');
             break;
         default:
             printf("null");

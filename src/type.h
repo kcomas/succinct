@@ -96,15 +96,15 @@ inline symbol_table *symbol_table_init(size_t size) {
 
 void symbol_table_free(symbol_table *s);
 
-symbol_table_bucket *symbol_table_find(symbol_table *table, const token *const t, const string *const s);
+symbol_table_bucket *symbol_table_find(symbol_table *const table, const token *const t, const string *const s);
 
-symbol_table_bucket *_symbol_table_findsert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s, bool insert_only);
+symbol_table_bucket *_symbol_table_findsert(symbol_table *const *table, symbol_table_type type, const token *const t, const string *const s, bool insert_only);
 
-inline symbol_table_bucket *symbol_table_insert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s) {
+inline symbol_table_bucket *symbol_table_insert(symbol_table *const *table, symbol_table_type type, const token *const t, const string *const s) {
     return _symbol_table_findsert(table, type, t, s, true);
 }
 
-inline symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s) {
+inline symbol_table_bucket *symbol_table_findsert(symbol_table *const *table, symbol_table_type type, const token *const t, const string *const s) {
     return _symbol_table_findsert(table, type, t, s, false);
 }
 

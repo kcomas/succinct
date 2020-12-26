@@ -92,7 +92,7 @@ static symbol_table_bucket *bucket_init(symbol_table_type table_type, size_t sym
     return b;
 }
 
-symbol_table_bucket *symbol_table_find(symbol_table *table, const token *const t, const string *const s) {
+symbol_table_bucket *symbol_table_find(symbol_table *const table, const token *const t, const string *const s) {
     size_t hash_idx = hash_symbol(t, s) % table->size;
     symbol_table_bucket *b = table->buckets[hash_idx];
     if (b == NULL) return NULL;
@@ -103,7 +103,7 @@ symbol_table_bucket *symbol_table_find(symbol_table *table, const token *const t
     return NULL;
 }
 
-symbol_table_bucket *_symbol_table_findsert(symbol_table **table, symbol_table_type table_type, const token *const t, const string *const s, bool insert_only) {
+symbol_table_bucket *_symbol_table_findsert(symbol_table *const *table, symbol_table_type table_type, const token *const t, const string *const s, bool insert_only) {
     // TODO resize
     // check if the symbol is in table
     size_t hash_idx = hash_symbol(t, s) % (*table)->size;
@@ -125,9 +125,9 @@ symbol_table_bucket *_symbol_table_findsert(symbol_table **table, symbol_table_t
     return b->next;
 }
 
-extern inline symbol_table_bucket *symbol_table_insert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s);
+extern inline symbol_table_bucket *symbol_table_insert(symbol_table *const *table, symbol_table_type type, const token *const t, const string *const s);
 
-extern inline symbol_table_bucket *symbol_table_findsert(symbol_table **table, symbol_table_type type, const token *const t, const string *const s);
+extern inline symbol_table_bucket *symbol_table_findsert(symbol_table *const *table, symbol_table_type type, const token *const t, const string *const s);
 
 extern inline var_type *var_type_init(var_type_header header, var_type_body body);
 

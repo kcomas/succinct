@@ -25,18 +25,22 @@ inline void infer_state_free(infer_state *state) {
 #define INFER_STATUS_PFX(NAME) INFER_STATUS_##NAME
 
 typedef enum {
+    INFER_STATUS_PFX(_START_INFER),
     INFER_STATUS_PFX(OK),
     INFER_STATUS_PFX(INVALID_NODE),
     INFER_STATUS_PFX(VAR_TYPE_NOT_FOUND),
-    INFER_STATUS_PFX(INVALID_ASSGIN_LEFT_SIDE),
+    INFER_STATUS_PFX(INVALID_ASSIGN_LEFT_SIDE),
     INFER_STATUS_PFX(INVALID_LEFT_SIDE),
     INFER_STATUS_PFX(INVALID_RIGHT_SIDE),
     INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL),
     INFER_STATUS_PFX(INVALID_TYPE_FOR_OP),
     INFER_STATUS_PFX(CANNOT_GET_TYPE_FROM_NODE),
     INFER_STATUS_PFX(CANNOT_GET_CALL_TYPE),
-    INFER_STATUS_PFX(CALL_NOT_ON_FN)
+    INFER_STATUS_PFX(CALL_NOT_ON_FN),
+    INFER_STATUS_PFX(_END_INFER)
 } infer_status;
+
+const char *infer_status_string(infer_status status);
 
 inline infer_status infer_error(infer_state *const state, infer_status status, ast_node *const node) {
     error_infer(state->e, status, node);

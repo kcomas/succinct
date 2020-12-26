@@ -6,6 +6,7 @@ const char *error_type_string(error_type type) {
         "OK",
         "ERRNO",
         "PARSER",
+        "INFER",
         "_END_ERROR"
     };
     return type >= ERROR_PFX(OK) && type < ERROR_PFX(_END_ERROR) ? types[type] : "ERROR_TYPE_NOT_FOUND";

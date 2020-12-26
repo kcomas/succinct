@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "parser.h"
 #include "error.h"
+#include "infer.h"
 
 void token_print_json(const token *const t, const string *const s);
 
