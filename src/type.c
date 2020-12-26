@@ -134,6 +134,9 @@ extern inline var_type *var_type_init(var_type_header header, var_type_body body
 void var_type_free(var_type *t) {
     if (t == NULL) return;
     switch (t->header) {
+        case VAR_PFX(VEC):
+            var_type_vec_free(t->body.vec);
+            break;
         case VAR_PFX(FN):
             var_type_fn_free(t->body.fn);
             break;
@@ -146,6 +149,9 @@ void var_type_free(var_type *t) {
 void var_type_copy(var_type *const dest, const var_type *const src) {
     dest->header = src->header;
     switch (src->header) {
+        case VAR_PFX(VEC):
+            dest->body.vec = src->body.vec;
+            break;
         case VAR_PFX(FN):
             dest->body.fn = src->body.fn;
             break;
@@ -164,6 +170,10 @@ bool var_type_equal(const var_type *const left, const var_type *const right) {
     }
     return true;
 }
+
+extern inline var_type *var_type_vec_init(size_t len);
+
+extern inline void var_type_vec_free(var_type_vec *v);
 
 extern inline var_type *var_type_fn_init(size_t symbol_table_size);
 

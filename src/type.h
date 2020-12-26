@@ -115,11 +115,13 @@ typedef struct {
     symbol_table_bucket *args[];// types of each arg
 } var_type_fn; // module has void return type and symbol table
 
+typedef struct {
+    size_t len; // 0 for dynamic
+    var_type *dynamic, *items[]; // all items have dynamic type
+} var_type_vec;
+
 typedef union {
-    struct {
-        size_t len; // 0 for dynamic
-        var_type *dynamic, *items[]; // all items have dynamic type
-    } *vec;
+    var_type_vec *vec;
     struct {
         size_t len; // 0 for dynamic
         var_type *dynamic; // all keys have this type
@@ -145,6 +147,23 @@ void var_type_free(var_type *t);
 void var_type_copy(var_type *const dest, const var_type *const src);
 
 bool var_type_equal(const var_type *const left, const var_type *const right);
+
+inline var_type *var_type_vec_init(size_t len) {
+    var_type_vec *v;
+    if (len  > 0) {
+        v = calloc(1, sizeof(var_type_vec) + sizeof(var_type) * sizeof(var_type*));
+        v->len = len;
+    } else {
+        v = calloc(1, sizeof(var_type_vec));
+    }
+    return var_type_init(VAR_PFX(VEC), (var_type_body) { .vec = v });
+}
+
+inline void var_type_vec_free(var_type_vec *v) {
+    for (size_t i = 0; i < v->len; i++) var_type_free(v->items[i]);
+    var_type_free(v->dynamic);
+    free(v);
+}
 
 inline var_type *var_type_fn_init(size_t symbol_table_size) {
     var_type_fn *fn = calloc(1, sizeof(var_type_fn) + sizeof(symbol_table_bucket*) * AST_MAX_ARGS);
