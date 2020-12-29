@@ -103,7 +103,7 @@ symbol_table_bucket *symbol_table_find(symbol_table *const table, const token *c
     return NULL;
 }
 
-symbol_table_bucket *_symbol_table_findsert(symbol_table *const *table, symbol_table_type table_type, const token *const t, const string *const s, bool insert_only) {
+symbol_table_bucket *_symbol_table_findsert(symbol_table **const table, symbol_table_type table_type, const token *const t, const string *const s, bool insert_only) {
     // TODO resize
     // check if the symbol is in table
     size_t hash_idx = hash_symbol(t, s) % (*table)->size;
@@ -125,9 +125,9 @@ symbol_table_bucket *_symbol_table_findsert(symbol_table *const *table, symbol_t
     return b->next;
 }
 
-extern inline symbol_table_bucket *symbol_table_insert(symbol_table *const *table, symbol_table_type type, const token *const t, const string *const s);
+extern inline symbol_table_bucket *symbol_table_insert(symbol_table **const table, symbol_table_type type, const token *const t, const string *const s);
 
-extern inline symbol_table_bucket *symbol_table_findsert(symbol_table *const *table, symbol_table_type type, const token *const t, const string *const s);
+extern inline symbol_table_bucket *symbol_table_findsert(symbol_table **const table, symbol_table_type type, const token *const t, const string *const s);
 
 extern inline var_type *var_type_init(var_type_header header, var_type_body body);
 
@@ -161,6 +161,7 @@ void var_type_copy(var_type *const dest, const var_type *const src) {
 }
 
 bool var_type_equal(const var_type *const left, const var_type *const right) {
+    if (left == NULL || right == NULL) return false;
     if (left->header != right->header) return false;
     switch (left->header) {
         case VAR_PFX(FN):

@@ -394,9 +394,7 @@ static ast_if_node *parse_if(parser_state *const state, ast_fn_node *const cur_f
 parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, ast_node_holder *const head) {
     token_status ts;
     symbol_table_bucket *b = NULL;
-    ast_node *n = NULL;
-    ast_node *value_tmp = NULL;
-    ast_node *cur_node = NULL;
+    ast_node *n = NULL, *value_tmp = NULL, *cur_node = NULL;
     int64_t intv;
     utf8 cv;
     ast_fn_node *fn, *parent;
