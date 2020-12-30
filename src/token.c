@@ -99,7 +99,14 @@ static token_status parse_var(token* const t, const string *const s) {
             case 'u':
                 switch (token_char_lookup(t, s, 1)) {
                     case '6':
-                        if (token_char_lookup(t, s, 2)) return found_token(t, TOKEN_PFX(U64));
+                        switch (token_char_lookup(t, s, 2)) {
+                            case '4':
+                                return found_token(t, TOKEN_PFX(U64));
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
                         break;
                 }
                 break;
