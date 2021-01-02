@@ -42,12 +42,13 @@ void symbol_table_bucket_print_json(const symbol_table_bucket *const b) {
 
 void symbol_table_print_json(const symbol_table *const table) {
     printf("{\"size\":%lu,\"symbol_counter\":%lu,\"buckets\":[", table->size, table->symbol_counter);
+    size_t sub_symbol_counter = 0;
     for (size_t i = 0; i < table->size; i++) {
         symbol_table_bucket *b = table->buckets[i];
         while (b != NULL) {
             symbol_table_bucket_print_json(b);
-            // only print comma if next is not null
-            if (b->next != NULL) putchar(',');
+            // only print comma if more symbols exist
+            if (++sub_symbol_counter < table->symbol_counter) putchar(',');
             b = b->next;
         }
     }
@@ -71,7 +72,10 @@ void var_type_print_json(const var_type *const t) {
                 printf("null");
             } else {
                 putchar('[');
-                for (size_t i = 0; i < t->body.fn->num_args; i++) symbol_table_bucket_print_json(t->body.fn->args[i]);
+                for (size_t i = 0; i < t->body.fn->num_args; i++) {
+                    symbol_table_bucket_print_json(t->body.fn->args[i]);
+                    if (i + 1 < t->body.fn->num_args) putchar(',');
+                }
                 putchar(']');
             }
             putchar('}');

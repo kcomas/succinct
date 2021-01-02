@@ -74,11 +74,12 @@ inline size_t token_len(const token *const t) {
 inline token *token_copy(token *const dest, const token *const src) {
     return memcpy(dest, src, sizeof(token));
 }
- inline token *token_init_copy(const token *const src) {
+
+inline token *token_init_copy(const token *const src) {
     token *t = token_init();
     token_copy(t, src);
     return t;
- }
+}
 
 #define TOKEN_STATUS_PFX(NAME) TOKEN_STATUS_##NAME
 
