@@ -30,6 +30,7 @@ typedef enum {
     // Operators
     TOKEN_PFX(ASSIGN), // :
     TOKEN_PFX(DEFINE), // ::
+    TOKEN_PFX(CAST), // $
     TOKEN_PFX(ADD), // +
     TOKEN_PFX(SUB), // -
     TOKEN_PFX(MUL), // *

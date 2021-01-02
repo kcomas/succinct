@@ -12,6 +12,7 @@
 typedef enum {
     // Data Types
     AST_PFX(_VALUE),
+    AST_PFX(TYPE),
     AST_PFX(VAR),
     AST_PFX(INT),
     AST_PFX(CHAR),
@@ -23,6 +24,7 @@ typedef enum {
     // OP
     AST_PFX(_OP),
     AST_PFX(ASSIGN),
+    AST_PFX(CAST),
     AST_PFX(ADD),
     AST_PFX(SUB),
     AST_PFX(WRITE),
@@ -74,6 +76,7 @@ typedef struct {
 } ast_op_node;
 
 typedef union {
+    var_type *type;
     symbol_table_bucket *var;
     int64_t intv;
     utf8 cv;

@@ -132,6 +132,8 @@ infer_status infer_node(infer_state *const state, ast_node *const node) {
     ast_if_cond *conds_head = NULL;
     ast_node_link *found_tail = NULL;
     switch (node->type) {
+        case AST_PFX(TYPE):
+            return INFER_STATUS_PFX(OK);
         case AST_PFX(VAR):
             if (node->data.var->type == NULL) return infer_error(state, INFER_STATUS_PFX(VAR_TYPE_NOT_FOUND), node);
             return INFER_STATUS_PFX(OK);

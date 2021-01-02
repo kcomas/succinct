@@ -152,6 +152,9 @@ void ast_if_node_print_json(const ast_if_node *const if_node, const string *cons
 void ast_node_print_json(const ast_node *const node, const string *const s) {
     printf("{\"type\":\"%s\",\"data\":", ast_type_string(node->type));
     switch (node->type) {
+        case AST_PFX(TYPE):
+            var_type_print_json(node->data.type);
+            break;
         case AST_PFX(VAR):
             symbol_table_bucket_print_json(node->data.var);
             break;

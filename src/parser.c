@@ -102,18 +102,24 @@ static ast_node* make_op(const parser_state *const state, ast_type type) {
     return ast_node_init(type, (ast_data) { .op = ast_op_node_init() }, state->next);
 }
 
+static var_type *var_type_from_token(parser_state* const state) {
+    switch (state->next->type) {
+        case TOKEN_PFX(U64):
+            return var_type_init(VAR_PFX(U64), (var_type_body) {});
+        default:
+            break;
+    }
+    return NULL;
+
+}
+
 static var_type *parse_var_type(parser_state* const state) {
     token_status ts;
     if ((ts = token_next(state->next, state->s)) != TOKEN_STATUS_PFX(SOME)) {
         // TODO error
         return NULL;
     }
-    switch (state->next->type) {
-        case TOKEN_PFX(U64): return var_type_init(VAR_PFX(U64), (var_type_body) {});
-        default:
-            break;
-    }
-    return NULL;
+    return var_type_from_token(state);
 }
 
 static ast_vec_node *parser_vec(parser_state *const state, ast_fn_node *const cur_fn) {
@@ -456,9 +462,11 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
                 }
                 n = ast_node_init(AST_PFX(CHAR), (ast_data) { .cv = cv  }, state->next);
                 break;
+            case TOKEN_PFX(U64):
+                n = ast_node_init(AST_PFX(TYPE), (ast_data) { .type = var_type_from_token(state) }, state->next);
+                break;
             case TOKEN_PFX(LBRACE):
-                ts = token_peek_check(state, TOKEN_PFX(LPARENS));
-                if (ts == TOKEN_STATUS_PFX(PEEK_SOME)) {
+                if ((ts = token_peek_check(state, TOKEN_PFX(LPARENS))) == TOKEN_STATUS_PFX(PEEK_SOME)) {
                     if ((fn = parse_fn(state, cur_fn)) == NULL) {
                         // TODO error
                         return parser_error(state, PARSER_STATUS_PFX(INVALID_FN));
@@ -483,6 +491,10 @@ parser_status parse_stmt(parser_state *const state, ast_fn_node *const cur_fn, a
             case TOKEN_PFX(ASSIGN):
                 // TODO fn call
                 n = make_op(state, AST_PFX(ASSIGN));
+                break;
+            case TOKEN_PFX(CAST):
+                // TODO fn call
+                n = make_op(state, AST_PFX(CAST));
                 break;
             case TOKEN_PFX(ADD):
                 // TODO fn call

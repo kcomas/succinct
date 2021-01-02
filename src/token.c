@@ -19,6 +19,7 @@ const char *token_type_string(token_type type) {
         "RPARENS",
         "ASSIGN",
         "DEFINE",
+        "CAST",
         "ADD",
         "SUB",
         "MUL",
@@ -189,6 +190,8 @@ token_status token_next(token *const t, const string *const s) {
                 return found_token(t, TOKEN_PFX(DEFINE));
             else
                 return found_token(t, TOKEN_PFX(ASSIGN));
+        case '$':
+            return found_token(t, TOKEN_PFX(CAST));
         case '+':
             return found_token(t, TOKEN_PFX(ADD));
         case '-':
