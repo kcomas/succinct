@@ -225,6 +225,9 @@ infer_status infer_node(infer_state *const state, ast_node *const node) {
                 return infer_error(state, INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL), node); // types must be equal
             node->data.op->return_type = var_type_init(VAR_PFX(VOID), (var_type_body) {});
             return INFER_STATUS_PFX(OK);
+        case AST_PFX(CAST):
+            // TODO
+            break;
         case AST_PFX(ADD):
         case AST_PFX(SUB):
             return infer_node_with_equal_type_sides(state, node, var_type_number_cmp);
