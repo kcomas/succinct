@@ -26,6 +26,8 @@ const char *infer_status_string(infer_status status) {
         "INVALID_ASSIGN_RIGHT_SIDE",
         "INVALID_LEFT_SIDE",
         "INVALID_RIGHT_SIDE",
+        "WRITE_MUST_BE_TO_FD_OR_INT",
+        "CANNOT_WRITE_VOID_TYPE",
         "NODE_TYPES_NOT_EQUAL",
         "INVALID_TYPE_FOR_OP",
         "_END_INFER"
@@ -128,7 +130,8 @@ static bool var_type_number_cmp(var_type_header header) {
 }
 
 infer_status infer_node(infer_state *const state, ast_node *const node) {
-    var_type type_a, type_b;
+    infer_status is;
+    var_type type_a;
     ast_if_cond *conds_head = NULL;
     ast_node_link *found_tail = NULL;
     switch (node->type) {
@@ -175,9 +178,9 @@ infer_status infer_node(infer_state *const state, ast_node *const node) {
             for (size_t i = 0; i < node->data.call->num_args; i++) {
                 if (infer_node(state, node->data.call->args[i]) != INFER_STATUS_PFX(OK))
                     return infer_error(state, INFER_STATUS_PFX(INVALID_CALL_ARG), node->data.call->args[i]);
-                if (get_type_from_node(node->data.call->args[i], &type_b))
+                if (get_type_from_node(node->data.call->args[i], &type_a))
                     return infer_error(state, INFER_STATUS_PFX(CANNOT_GET_ARG_TYPE), node->data.call->args[i]);
-                if (var_type_equal(&type_b, type_a.body.fn->args[i]->type) == false)
+                if (var_type_equal(&type_a, type_a.body.fn->args[i]->type) == false)
                     return infer_error(state, INFER_STATUS_PFX(INVALID_ARG_TYPE), node->data.call->args[i]);
             }
             return INFER_STATUS_PFX(OK);
@@ -193,14 +196,10 @@ infer_status infer_node(infer_state *const state, ast_node *const node) {
                     return infer_error(state, INFER_STATUS_PFX(INVALID_IF_BODY), node);
                 if (get_type_from_node(found_tail->node, &type_a) == false)
                     return infer_error(state, INFER_STATUS_PFX(CANNOT_GET_TYPE_FROM_NODE), found_tail->node);
-                if (node->data.ifn->return_type->header == VAR_PFX(UNKNOWN)) {
-                    // set type
+                if (node->data.ifn->return_type->header == VAR_PFX(UNKNOWN)) // set type
                     var_type_copy(node->data.ifn->return_type, &type_a);
-                } else {
-                    // check type
-                    if (var_type_equal(node->data.ifn->return_type, &type_a) == false)
-                        return infer_error(state, INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL), node);
-                }
+                else if (var_type_equal(node->data.ifn->return_type, &type_a) == false) // check type
+                    return infer_error(state, INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL), node);
                 conds_head = conds_head->next;
             }
             // infer else
@@ -232,8 +231,19 @@ infer_status infer_node(infer_state *const state, ast_node *const node) {
         case AST_PFX(SUB):
             return infer_node_with_equal_type_sides(state, node, var_type_number_cmp);
         case AST_PFX(WRITE):
-            // TODO
-            break;
+            if ((is = infer_op_node_sides(state, node)) != INFER_STATUS_PFX(OK)) return infer_error(state, is, node);
+            // left must be a fd or int
+            if (get_type_from_node(node->data.op->left, &type_a) == false)
+                return infer_error(state, INFER_STATUS_PFX(CANNOT_GET_TYPE_FROM_NODE), node->data.op->left);
+            if (type_a.header != VAR_PFX(FD) || var_type_is_integer(type_a.header) == false)
+                return infer_error(state, INFER_STATUS_PFX(WRITE_MUST_BE_TO_FD_OR_INT), node->data.op->left);
+            // right side can be anything except void
+            if (get_type_from_node(node->data.op->right, &type_a) == false)
+                return infer_error(state, INFER_STATUS_PFX(CANNOT_GET_TYPE_FROM_NODE), node->data.op->right);
+            if (type_a.header == VAR_PFX(VOID))
+                return infer_error(state, INFER_STATUS_PFX(CANNOT_WRITE_VOID_TYPE), node->data.op->right);
+            node->data.op->return_type = var_type_init(VAR_PFX(VOID), (var_type_body) {});
+            return INFER_STATUS_PFX(OK);
         case AST_PFX(EQUAL):
         case AST_PFX(LESSEQUAL):
             return infer_node_with_equal_type_sides(state, node, var_type_number_cmp);

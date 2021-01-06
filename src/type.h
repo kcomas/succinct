@@ -39,7 +39,7 @@ typedef enum {
 const char *var_type_header_string(var_type_header header);
 
 inline bool var_type_is_primative(var_type_header header) {
-    return header >= VAR_PFX(VOID) && header <= VAR_PFX(TIME);
+    return header >= VAR_PFX(VOID) && header <= VAR_PFX(CHAR);
 }
 
 inline bool var_type_is_unsgined(var_type_header header) {
@@ -52,6 +52,10 @@ inline bool var_type_is_signed(var_type_header header) {
 
 inline bool var_type_is_float(var_type_header header) {
     return header == VAR_PFX(F32) || header == VAR_PFX(F64);
+}
+
+inline bool var_type_is_integer(var_type_header header) {
+    return header >= VAR_PFX(U8) && header <= VAR_PFX(I64);
 }
 
 inline bool var_type_is_number(var_type_header header) {
