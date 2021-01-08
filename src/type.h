@@ -58,8 +58,8 @@ inline bool var_type_is_integer(var_type_header header) {
     return header >= VAR_PFX(U8) && header <= VAR_PFX(I64);
 }
 
-inline bool var_type_is_number(var_type_header header) {
-    return var_type_is_unsgined(header) || var_type_is_signed(header) || var_type_is_float(header);
+inline bool var_type_is_collection(var_type_header header) {
+    return header >= VAR_PFX(VEC) && header < VAR_PFX(_END_VAR_TYPE_HEADER);
 }
 
 typedef struct _var_type var_type;

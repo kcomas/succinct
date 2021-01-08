@@ -41,7 +41,7 @@ extern inline bool var_type_is_float(var_type_header header);
 
 extern inline bool var_type_is_integer(var_type_header header);
 
-extern inline bool var_type_is_number(var_type_header header);
+extern inline bool var_type_is_collection(var_type_header header);
 
 const char *symbol_table_type_string(symbol_table_type type) {
     static const char *types[] = {
