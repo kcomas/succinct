@@ -32,9 +32,13 @@ typedef enum {
     INFER_STATUS_PFX(VAR_TYPE_NOT_FOUND),
     INFER_STATUS_PFX(INVALID_VEC_ITEM),
     INFER_STATUS_PFX(INVALID_FN),
+    INFER_STATUS_PFX(CALL_TARGET_NOT_VAR),
+    INFER_STATUS_PFX(RECURSIVE_CALL_ON_MODULE_LEVEL),
+    INFER_STATUS_PFX(CALL_DOES_NOT_EXIST_IN_PARENT),
     INFER_STATUS_PFX(CANNOT_GET_CALL_TYPE),
     INFER_STATUS_PFX(CALL_NOT_ON_FN),
     INFER_STATUS_PFX(INVALID_NUM_OF_ARGS_IN_CALL),
+    INFER_STATUS_PFX(INVALID_CALL_TARGET),
     INFER_STATUS_PFX(INVALID_CALL_ARG),
     INFER_STATUS_PFX(CANNOT_GET_ARG_TYPE),
     INFER_STATUS_PFX(INVALID_ARG_TYPE),
@@ -58,6 +62,6 @@ inline infer_status infer_error(infer_state *const state, infer_status status, a
     return status;
 }
 
-infer_status infer_node(infer_state *const state, ast_node *const node);
+infer_status infer_node(infer_state *const state, ast_fn_node *const cur_fn, ast_node *const node);
 
 infer_status infer(infer_state *const state);

@@ -62,6 +62,18 @@ void var_type_print_json(const var_type *const t) {
     }
     printf("{\"header\":\"%s\",\"body\":", var_type_header_string(t->header));
     switch (t->header) {
+        case VAR_PFX(VEC):
+            if (t->body.vec->len > 0) {
+                printf("{\"len\":%lu,\"items\":[", t->body.vec->len);
+                for (size_t i = 0; i < t->body.vec->len; i++) {
+                    var_type_print_json(t->body.vec->items[i]);
+                    if (i + 1 < t->body.vec->len) putchar(',');
+                }
+                printf("]}");
+            } else {
+                // TODO dynamic vec
+            }
+            break;
         case VAR_PFX(FN):
             printf("{\"num_args\":%lu,\"num_locals\":%lu,\"return_type\":", t->body.fn->num_args, t->body.fn->num_locals);
             var_type_print_json(t->body.fn->return_type);

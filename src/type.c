@@ -127,6 +127,18 @@ symbol_table_bucket *_symbol_table_findsert(symbol_table **const table, symbol_t
     return b->next;
 }
 
+bool symbol_table_has_bucket(const symbol_table *const table, const symbol_table_bucket *const bucket) {
+    for (size_t i = 0; i < table->size; i++) {
+        if (table->buckets[i] == NULL) continue;
+        symbol_table_bucket *b = table->buckets[i];
+        while (b != NULL) {
+            if (bucket == b) return true;
+            b = b->next;
+        }
+    }
+    return false;
+}
+
 extern inline symbol_table_bucket *symbol_table_insert(symbol_table **const table, symbol_table_type type, const token *const t, const string *const s);
 
 extern inline symbol_table_bucket *symbol_table_findsert(symbol_table **const table, symbol_table_type type, const token *const t, const string *const s);
@@ -161,6 +173,8 @@ void var_type_copy(var_type *const dest, const var_type *const src) {
             break;
     }
 }
+
+extern inline var_type *var_type_init_copy(const var_type *const src);
 
 bool var_type_equal(const var_type *const left, const var_type *const right) {
     if (left == NULL || right == NULL) return false;

@@ -104,6 +104,8 @@ symbol_table_bucket *symbol_table_find(symbol_table *const table, const token *c
 
 symbol_table_bucket *_symbol_table_findsert(symbol_table **const table, symbol_table_type type, const token *const t, const string *const s, bool insert_only);
 
+bool symbol_table_has_bucket(const symbol_table *const table, const symbol_table_bucket *const bucket);
+
 inline symbol_table_bucket *symbol_table_insert(symbol_table **const table, symbol_table_type type, const token *const t, const string *const s) {
     return _symbol_table_findsert(table, type, t, s, true);
 }
@@ -149,6 +151,10 @@ inline var_type *var_type_init(var_type_header header, var_type_body body) {
 void var_type_free(var_type *t);
 
 void var_type_copy(var_type *const dest, const var_type *const src);
+
+inline var_type *var_type_init_copy(const var_type *const src) {
+    return var_type_init(src->header, src->body);
+}
 
 bool var_type_equal(const var_type *const left, const var_type *const right);
 
