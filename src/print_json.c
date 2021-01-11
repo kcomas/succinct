@@ -80,17 +80,12 @@ void var_type_print_json(const var_type *const t) {
             printf(",\"symbol_table\":");
             symbol_table_print_json(t->body.fn->symbols);
             printf(",\"args\":");
-            if (t->body.fn->num_args == 0) {
-                printf("null");
-            } else {
-                putchar('[');
-                for (size_t i = 0; i < t->body.fn->num_args; i++) {
-                    symbol_table_bucket_print_json(t->body.fn->args[i]);
-                    if (i + 1 < t->body.fn->num_args) putchar(',');
-                }
-                putchar(']');
+            putchar('[');
+            for (size_t i = 0; i < t->body.fn->num_args; i++) {
+                symbol_table_bucket_print_json(t->body.fn->args[i]);
+                if (i + 1 < t->body.fn->num_args) putchar(',');
             }
-            putchar('}');
+            printf("]}");
             break;
         default:
             printf("null");
