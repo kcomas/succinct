@@ -105,12 +105,11 @@ static ast_node* make_op(const parser_state *const state, ast_type type) {
 static var_type *var_type_from_token(parser_state* const state) {
     switch (state->next->type) {
         case TOKEN_PFX(U64):
-            return var_type_init(VAR_PFX(U64), (var_type_body) {});
+            return var_type_init(VAR_PFX(U64), true, (var_type_body) {});
         default:
             break;
     }
     return NULL;
-
 }
 
 static var_type *parse_var_type(parser_state* const state) {

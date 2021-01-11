@@ -138,12 +138,14 @@ typedef union {
 
 typedef struct _var_type {
     var_type_header header;
+    bool owned; // if this type is owner of the body
     var_type_body body; // empty for all except for defined by union
 } var_type;
 
-inline var_type *var_type_init(var_type_header header, var_type_body body) {
+inline var_type *var_type_init(var_type_header header, bool owned, var_type_body body) {
     var_type *t = calloc(1, sizeof(var_type));
     t->header = header;
+    t->owned = owned;
     t->body = body;
     return t;
 }
@@ -153,7 +155,7 @@ void var_type_free(var_type *t);
 void var_type_copy(var_type *const dest, const var_type *const src);
 
 inline var_type *var_type_init_copy(const var_type *const src) {
-    return var_type_init(src->header, src->body);
+    return var_type_init(src->header, false, src->body);
 }
 
 bool var_type_equal(const var_type *const left, const var_type *const right);
@@ -166,7 +168,7 @@ inline var_type *var_type_vec_init(size_t len) {
     } else {
         v = calloc(1, sizeof(var_type_vec));
     }
-    return var_type_init(VAR_PFX(VEC), (var_type_body) { .vec = v });
+    return var_type_init(VAR_PFX(VEC), true, (var_type_body) { .vec = v });
 }
 
 inline void var_type_vec_free(var_type_vec *v) {
@@ -178,7 +180,7 @@ inline void var_type_vec_free(var_type_vec *v) {
 inline var_type *var_type_fn_init(size_t symbol_table_size) {
     var_type_fn *fn = calloc(1, sizeof(var_type_fn) + sizeof(symbol_table_bucket*) * AST_MAX_ARGS);
     fn->symbols = symbol_table_init(symbol_table_size);
-    return var_type_init(VAR_PFX(FN), (var_type_body) { .fn = fn });
+    return var_type_init(VAR_PFX(FN), true, (var_type_body) { .fn = fn });
 }
 
 inline void var_type_fn_free(var_type_fn *fn) {

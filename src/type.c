@@ -62,7 +62,7 @@ void symbol_table_free(symbol_table *s) {
         while (b != NULL) {
             symbol_table_bucket *tmp = b;
             b = b->next;
-            if (tmp->table_type == SYMBOL_PFX(ARG)) var_type_free(tmp->type);
+            var_type_free(tmp->type);
             free(tmp);
         }
     }
@@ -143,25 +143,28 @@ extern inline symbol_table_bucket *symbol_table_insert(symbol_table **const tabl
 
 extern inline symbol_table_bucket *symbol_table_findsert(symbol_table **const table, symbol_table_type type, const token *const t, const string *const s);
 
-extern inline var_type *var_type_init(var_type_header header, var_type_body body);
+extern inline var_type *var_type_init(var_type_header header, bool owned, var_type_body body);
 
 void var_type_free(var_type *t) {
     if (t == NULL) return;
-    switch (t->header) {
-        case VAR_PFX(VEC):
-            var_type_vec_free(t->body.vec);
-            break;
-        case VAR_PFX(FN):
-            var_type_fn_free(t->body.fn);
-            break;
-        default:
-            break;
+    if (t->owned) {
+        switch (t->header) {
+            case VAR_PFX(VEC):
+                var_type_vec_free(t->body.vec);
+                break;
+            case VAR_PFX(FN):
+                var_type_fn_free(t->body.fn);
+                break;
+            default:
+                break;
+        }
     }
     free(t);
 }
 
 void var_type_copy(var_type *const dest, const var_type *const src) {
     dest->header = src->header;
+    dest->owned = false;
     switch (src->header) {
         case VAR_PFX(VEC):
             dest->body.vec = src->body.vec;

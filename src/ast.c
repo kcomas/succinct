@@ -30,6 +30,9 @@ extern inline ast_node *ast_node_init(ast_type type, ast_data data, const token 
 
 void ast_node_free(ast_node *node) {
     switch (node->type) {
+        case AST_PFX(TYPE):
+            var_type_free(node->data.type);
+            break;
         case AST_PFX(VAR):
             // var is freed in the symbol table
             break;

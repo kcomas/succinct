@@ -53,7 +53,7 @@ int print_infer(const char *const file) {
     infer_status is = infer(istate);
     if (is != INFER_STATUS_PFX(OK)) error_print_json(istate->e, istate->p->s);
     else ast_fn_node_print_json(istate->p->root_fn, istate->p->s);
-    // infer_state_free(istate);
+    infer_state_free(istate);
     return is;
 }
 
