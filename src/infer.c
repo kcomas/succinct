@@ -14,6 +14,9 @@ const char *infer_status_string(infer_status status) {
         "VAR_TYPE_NOT_FOUND",
         "INVALID_VEC_ITEM",
         "INVALID_FN",
+        "FN_INVALID_FINAL_STMT",
+        "FN_CANNOT_GET_FINAL_TYPE",
+        "FN_LAST_TYPE_NOT_EQUAL",
         "CALL_TARGET_NOT_VAR",
         "RECURSIVE_CALL_ON_MODULE_LEVEL",
         "CALL_DOES_NOT_EXIST_IN_PARENT",
@@ -71,6 +74,9 @@ static bool get_type_from_node(const ast_node *const node, var_type *const type)
             if (inner_type.body.fn == NULL) return false;
             var_type_copy(type, inner_type.body.fn->return_type);
             return true;
+        case AST_PFX(IF):
+            var_type_copy(type, node->data.ifn->return_type);
+            return true;
         default:
             if (is_op(node)) {
                 if (node->data.op->return_type == NULL) return false;
@@ -122,7 +128,15 @@ static infer_status infer_node_list(infer_state *const state, ast_fn_node *const
 static infer_status infer_fn(infer_state *const state, ast_fn_node *const fn) {
     ast_node_link *found_tail = NULL, *head = fn->body_head;
     if (infer_node_list(state, fn, head, &found_tail) != INFER_STATUS_PFX(OK)) return INFER_STATUS_PFX(INVALID_FN);
-    // TODO check last stmt has the correct return type
+    if (found_tail == NULL) return INFER_STATUS_PFX(FN_INVALID_FINAL_STMT);
+    if (fn->type->body.fn->return_type != NULL && fn->type->body.fn->return_type->header != VAR_PFX(VOID)) {
+        // check last stmt has the correct return type
+        var_type last_type;
+        if (get_type_from_node(found_tail->node, &last_type) == false)
+            return INFER_STATUS_PFX(FN_CANNOT_GET_FINAL_TYPE);
+        if (var_type_equal(fn->type->body.fn->return_type, &last_type) == false)
+            return INFER_STATUS_PFX(FN_LAST_TYPE_NOT_EQUAL);
+    }
     return INFER_STATUS_PFX(OK);
 }
 
@@ -201,8 +215,8 @@ infer_status infer_node(infer_state *const state, ast_fn_node *const cur_fn, ast
             }
             return INFER_STATUS_PFX(OK);
         case AST_PFX(FN):
-            if (infer_fn(state, node->data.fn) != INFER_STATUS_PFX(OK))
-                return infer_error(state, INFER_STATUS_PFX(INVALID_FN), node);
+            if ((is = infer_fn(state, node->data.fn)) != INFER_STATUS_PFX(OK))
+                return infer_error(state, is, node);
             return INFER_STATUS_PFX(OK);
         case AST_PFX(CALL):
             if (node->data.call->func->type != AST_PFX(VAR))
@@ -214,7 +228,6 @@ infer_status infer_node(infer_state *const state, ast_fn_node *const cur_fn, ast
                     return infer_error(state, INFER_STATUS_PFX(RECURSIVE_CALL_ON_MODULE_LEVEL), node);
                 if (symbol_table_has_bucket(cur_fn->parent->type->body.fn->symbols, node->data.call->func->data.var) == false)
                     return infer_error(state, INFER_STATUS_PFX(CALL_DOES_NOT_EXIST_IN_PARENT), node);
-
                 node->data.call->func->data.var->type = var_type_init_copy(cur_fn->type);
             }
             // check for fn type and the correct num of args
