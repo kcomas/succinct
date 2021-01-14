@@ -149,12 +149,19 @@ static infer_status infer_op_node_sides(infer_state *const state, ast_fn_node *c
     return INFER_STATUS_PFX(OK);
 }
 
-static infer_status infer_node_with_equal_type_sides(infer_state *const state, ast_fn_node *const cur_fn, ast_node *const node, bool (*type_check)(var_type_header)) {
+static infer_status infer_node_with_equal_type_sides(infer_state *const state, ast_fn_node *const cur_fn, ast_node *const node) {
     infer_status is;
-    if ((is = infer_op_node_sides(state, cur_fn, node)) != INFER_STATUS_PFX(OK)) return infer_error(state, is, node);
+    if ((is = infer_op_node_sides(state, cur_fn, node)) != INFER_STATUS_PFX(OK)) return is;
     // check types are equal
     if (node_equal_types(node->data.op->left, node->data.op->right) == false)
-        return infer_error(state, INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL), node);
+        return INFER_STATUS_PFX(NODE_TYPES_NOT_EQUAL);
+    return INFER_STATUS_PFX(OK);
+}
+
+static infer_status infer_node_with_equal_type_sides_and_return(infer_state *const state, ast_fn_node *const cur_fn, ast_node *const node, bool (*type_check)(var_type_header)) {
+    infer_status is;
+    if ((is = infer_node_with_equal_type_sides(state, cur_fn, node)) != INFER_STATUS_PFX(OK))
+        return infer_error(state, is, node);
     // set the type of the node
     node->data.op->return_type = var_type_init_from_node(node->data.op->left);
     // check the allowed types for op
@@ -223,8 +230,7 @@ infer_status infer_node(infer_state *const state, ast_fn_node *const cur_fn, ast
                 return infer_error(state, INFER_STATUS_PFX(CALL_TARGET_NOT_VAR), node); // should never happen
             if (node->data.call->func->data.var->type == NULL && node->data.call->func->data.var->table_type == SYMBOL_PFX(LOCAL)) {
                 // in a recursive call the var type would not have been set assume this call is recursive
-                // var should be in the parent
-                if (cur_fn->parent == NULL)
+                if (cur_fn->parent == NULL) // var should be in the parent
                     return infer_error(state, INFER_STATUS_PFX(RECURSIVE_CALL_ON_MODULE_LEVEL), node);
                 if (symbol_table_has_bucket(cur_fn->parent->type->body.fn->symbols, node->data.call->func->data.var) == false)
                     return infer_error(state, INFER_STATUS_PFX(CALL_DOES_NOT_EXIST_IN_PARENT), node);
@@ -303,7 +309,7 @@ infer_status infer_node(infer_state *const state, ast_fn_node *const cur_fn, ast
             return INFER_STATUS_PFX(OK);
         case AST_PFX(ADD):
         case AST_PFX(SUB):
-            return infer_node_with_equal_type_sides(state, cur_fn, node, var_type_number_cmp);
+            return infer_node_with_equal_type_sides_and_return(state, cur_fn, node, var_type_number_cmp);
         case AST_PFX(WRITE):
             if ((is = infer_op_node_sides(state, cur_fn, node)) != INFER_STATUS_PFX(OK))
                 return infer_error(state, is, node);
@@ -322,7 +328,10 @@ infer_status infer_node(infer_state *const state, ast_fn_node *const cur_fn, ast
             return INFER_STATUS_PFX(OK);
         case AST_PFX(EQUAL):
         case AST_PFX(LESSEQUAL):
-            return infer_node_with_equal_type_sides(state, cur_fn, node, var_type_number_cmp);
+            if ((is = infer_node_with_equal_type_sides(state, cur_fn, node)) != INFER_STATUS_PFX(OK))
+                return infer_error(state, is, node);
+            node->data.op->return_type = var_type_init(VAR_PFX(U8), true, (var_type_body) {});
+            return INFER_STATUS_PFX(OK);
         default:
             break;
     }
