@@ -28,3 +28,11 @@
 #ifndef ERROR_INFER_MAX_STACK_SIZE
     #define ERROR_INFER_MAX_STACK_SIZE 20
 #endif
+
+#ifndef IR_MAX_FN_STACK
+    #define IR_MAX_FN_STACK 5
+#endif
+
+#ifndef IR_FN_MAX_LOCAL_STACK_SIZE
+    #define IR_FN_MAX_LOCAL_STACK_SIZE 30
+#endif

@@ -284,6 +284,7 @@ infer_status infer_node(infer_state *const state, ast_fn_node *const cur_fn, ast
             // left must be a var
             if (node->data.op->left->type != AST_PFX(VAR))
                 return infer_error(state, INFER_STATUS_PFX(INVALID_ASSIGN_LEFT_SIDE), node);
+            // TODO right cannot be a var
             if (infer_node(state, cur_fn, node->data.op->right) != INFER_STATUS_PFX(OK))
                 return infer_error(state, INFER_STATUS_PFX(INVALID_ASSIGN_RIGHT_SIDE), node);
             if (node->data.op->left->data.var->type == NULL)

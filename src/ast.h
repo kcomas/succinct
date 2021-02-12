@@ -90,7 +90,7 @@ typedef union {
 typedef struct _ast_node {
     ast_type type;
     ast_data data;
-    token *t;
+    token *t; // copy of token
 } ast_node;
 
 typedef struct {
